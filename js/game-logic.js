@@ -998,6 +998,95 @@ function performEnemyAttack(defender) {
         result.message = `${currentEnemy.name}的攻擊被你閃避了！`;
         return result;
     }
+    // 超載詞綴：如有 onAttack 則優先處理
+    if (currentEnemy.affixes) {
+        for (const affix of currentEnemy.affixes) {
+            if (affix.onAttack) {
+                // attackFn: 執行一次攻擊，倍率可調
+                const attackFn = (multiplier = 1.0) => {
+                    let dmg = getRandomDamage(currentEnemy.attackMin, currentEnemy.attackMax);
+                    // 波動詞綴修正
+                    if (currentEnemy.affixes) {
+                        currentEnemy.affixes.forEach(a => {
+                            if (a.modifyDamage) {
+                                dmg = a.modifyDamage(dmg, currentEnemy);
+                            }
+                        });
+                    }
+                    if (activeTrial && activeTrial.id === 'swordsmanAttack') {
+                        dmg = 99999;
+                    }
+                    dmg = Math.round(dmg * multiplier);
+                    // ...existing code for applying damage below...
+                    let survivedWithOneHP = false;
+                    let message = '';
+                    const effectiveStats = getPlayerEffectiveStats();
+                    let result = { message: '', enemyKilled: false };
+                    let currentEvasion = effectiveStats.evasion;
+                    if (activeTrial && activeTrial.id === 'shortLivedTrial') { currentEvasion = 0; }
+                    if ((defender.lastStandEvasionBonus || 0) > 0 && (defender.hp / defender.maxHp <= 0.25)) {
+                        currentEvasion += defender.lastStandEvasionBonus;
+                    }
+                    if (Math.random() * 100 < currentEvasion) {
+                        showFloatingText('閃避!', playerChar, 'miss');
+                        result.message = `${currentEnemy.name}的攻擊被你閃避了！`;
+                        gameMessage.textContent += result.message;
+                        updateDisplay();
+                        return result;
+                    }
+                    if (defender.tempIncomingDamageMultiplier > 1.0) {
+                        dmg *= defender.tempIncomingDamageMultiplier;
+                        dmg = Math.round(dmg);
+                        message += ` (你處於攻擊姿態，受到額外傷害！)`;
+                    }
+                    dmg -= (defender.flatDamageReduction || 0);
+                    if (dmg < 1) dmg = 1;
+                    if (survivedWithOneHP && (dmg >= defender.hp)) {
+                        const damageTaken = defender.hp - 1;
+                        defender.hp = 1;
+                        showFloatingText(`-${damageTaken}`, playerChar, 'damage');
+                        message += `${currentEnemy.name}對你造成了致命一擊，但你勉強存活了下來！`;
+                        result.message = message;
+                        return result;
+                    }
+                    if (defender.shield > 0) {
+                        const blockedDamage = Math.min(defender.shield, dmg);
+                        defender.shield -= blockedDamage;
+                        dmg -= blockedDamage;
+                        message += ` 你的護盾抵擋了 ${blockedDamage} 點傷害！`;
+                    }
+                    if (defender.canTakeDamagePenalty) {
+                        const penaltyDamage = Math.round(effectiveStats.maxHp * 0.2);
+                        defender.hp = Math.max(1, defender.hp - penaltyDamage);
+                        showFloatingText(`-${penaltyDamage}`, playerChar, 'damage');
+                        message += `(猛擊副作用：額外損失 ${penaltyDamage} 生命！) `;
+                    }
+                    if (dmg > 0) {
+                        defender.hp -= dmg;
+                        if (currentEnemy.affixes) {
+                            currentEnemy.affixes.forEach(a => {
+                                if (a.onDealDamage) {
+                                    a.onDealDamage(dmg, currentEnemy, defender);
+                                }
+                            });
+                        }
+                    }
+                    showFloatingText(`-${dmg}`, playerChar, 'damage');
+                    message += `${currentEnemy.name}對你造成了 ${dmg} 點傷害！`;
+                    // ...existing code for bar loss, stun, reflect, heal, etc...（略）
+                    // 只做一次傷害顯示與扣血，其他副作用交給主流程
+                    gameMessage.textContent += message;
+                    updateDisplay();
+                    return result;
+                };
+                if (affix.onAttack(currentEnemy, defender, attackFn)) {
+                    // 已處理攻擊
+                    return { message: '', enemyKilled: false };
+                }
+            }
+        }
+    }
+    // 若無超載詞綴，走原本流程
     let damage = getRandomDamage(currentEnemy.attackMin, currentEnemy.attackMax);
     // 波動詞綴修正
     if (currentEnemy.affixes) {
