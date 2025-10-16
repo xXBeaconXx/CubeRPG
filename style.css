@@ -1,0 +1,881 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #e0f2f7;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+body.final-boss-battle .main-layout-container {background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(124,216,249,1) 100%);}
+body.player-low-health .main-layout-container {background: radial-gradient(ellipse at center,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 52%,rgba(255,209,209,1) 75%,rgba(255,38,38,1) 100%);}
+body.battle-will-active .main-layout-container {background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 45%,rgba(255,226,196,1) 64%,rgba(255,195,127,1) 86%,rgba(255,160,45,1) 100%);}
+body.exhausted .main-layout-container {background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(255,255,255,1) 52%,rgba(225,209,255,1) 75%,rgba(159,112,255,1) 100%);}
+body.player-stunned .main-layout-container {background: linear-gradient(to bottom,  rgba(213,206,166,1) 0%,rgba(201,193,144,1) 40%,rgba(183,173,112,1) 100%);}
+body.lightning-field .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(44,62,80,0) 0%,rgba(237,247,123,1) 100%);
+}
+body.primal-field .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(255,255,255,1) 0%,rgba(125,247,123,1) 100%);
+}
+.main-layout-container {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    gap: 20px;
+    width: 100%;
+    height: 100vh;
+    background-color: #ffffff;
+    padding: 20px;
+    box-sizing: border-box;
+    align-items: start;
+    overflow-y: auto;
+}
+#attackButton,
+.shop-item .buy-btn,
+.shop-item .upgrade-btn,
+.character-card button,
+.trial-card button,
+.event-options button,
+.custom-modal-options button,
+#craft-weapon-button,
+.synthesis-item button,
+#saveButton, #loadButton, #resetButton,
+.settlement-panel button,
+.shop-item .priority-btn-main,
+.tutorial-button,
+.detail-btn,
+.submit-quest-btn,
+.use-item-btn {
+    padding: 10px 18px;
+    font-size: 1em;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+    text-align: center;
+    margin: 4px 2px;
+}
+#attackButton:hover:not(:disabled),
+.shop-item .buy-btn:hover:not(:disabled),
+.shop-item .upgrade-btn:hover:not(:disabled),
+.character-card button:hover:not(:disabled),
+.trial-card button:hover:not(:disabled),
+.event-options button:hover:not(:disabled),
+.custom-modal-options button:hover,
+#craft-weapon-button:hover:not(:disabled),
+.synthesis-item button:hover:not(:disabled),
+#saveButton:hover, #loadButton:hover, #resetButton:hover,
+.settlement-panel button:hover,
+.shop-item .priority-btn-main:hover:not(:disabled),
+.tutorial-button:hover,
+.detail-btn:hover,
+.submit-quest-btn:hover:not(:disabled),
+.use-item-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+#attackButton:active:not(:disabled),
+.shop-item .buy-btn:active:not(:disabled),
+.shop-item .upgrade-btn:active:not(:disabled),
+.character-card button:active:not(:disabled),
+.trial-card button:active:not(:disabled),
+.event-options button:active:not(:disabled),
+.custom-modal-options button:active,
+#craft-weapon-button:active:not(:disabled),
+.synthesis-item button:active:not(:disabled),
+#saveButton:active, #loadButton:active, #resetButton:active,
+.settlement-panel button:active,
+.shop-item .priority-btn-main:active:not(:disabled),
+.tutorial-button:active,
+.detail-btn:active,
+.submit-quest-btn:active:not(:disabled),
+.use-item-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+#attackButton:disabled,
+.shop-item .buy-btn:disabled,
+.shop-item .upgrade-btn:disabled,
+.character-card button:disabled,
+.trial-card button:disabled,
+.event-options button:disabled,
+#craft-weapon-button:disabled,
+.synthesis-item button:disabled,
+.submit-quest-btn:disabled {
+    background-color: #cccccc !important; 
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+#attackButton,
+.event-options button,
+.btn-green { background-color: #28a745; }
+.event-options button { width: 100%; display: block; } 
+.character-card button, .trial-card button { background-color: #3498db; }
+.shop-item .buy-btn,
+#craft-weapon-button,
+.detail-btn,
+.submit-quest-btn { background-color: #f39c12; }
+.settlement-panel button { background-color: #2980b9; }
+.shop-item .upgrade-btn { background-color: #9b59b6; }
+.synthesis-item button { background-color: #2980b9; }
+#saveButton { background-color: #3498db; }
+#loadButton { background-color: #9b59b6; }
+#resetButton,
+.btn-red { background-color: #e74c3c; }
+.shop-item .priority-btn-main { background-color: #16a085; }
+.shop-item .priority-btn-main.active { background-color: #2ecc71; }
+.tutorial-button { background-color: #9b59b6; }
+.random-upgrade-btn { background-color: #e74c3c; }
+.use-item-btn { background-color: #27ae60; padding: 5px 12px; font-size: 0.9em; }
+#attackButton:hover:not(:disabled), .event-options button:hover:not(:disabled), .btn-green:hover { background-color: #218838; }
+.character-card button:hover:not(:disabled), .trial-card button:hover:not(:disabled), #saveButton:hover { background-color: #2980b9; }
+.shop-item .buy-btn:hover:not(:disabled), #craft-weapon-button:hover:not(:disabled), .detail-btn:hover, .submit-quest-btn:hover:not(:disabled) { background-color: #d68910; }
+.settlement-panel button:hover, .synthesis-item button:hover:not(:disabled) { background-color: #2471a3; }
+.shop-item .upgrade-btn:hover:not(:disabled), #loadButton:hover, .tutorial-button:hover { background-color: #8e44ad; }
+#resetButton:hover, .btn-red:hover { background-color: #c0392b; }
+.shop-item .priority-btn-main:hover:not(:disabled) { background-color: #117a65; }
+.shop-item .priority-btn-main.active:hover:not(:disabled) { background-color: #27ae60; }
+.random-upgrade-btn:hover:not(:disabled) { background-color: #c0392b; }
+.use-item-btn:hover { background-color: #229954; }
+.battle-area {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    margin: 20px 0;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.floating-text {
+    position: absolute;
+    font-size: 1.5em;
+    font-weight: bold;
+    color: red;
+    pointer-events: none;
+    animation: floatUp 1.5s ease-out forwards;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+}
+.floating-text.heal { color: #2ecc71; }
+.floating-text.crit { color: #f39c12; font-size: 1.8em; }
+.floating-text.miss { color: #95a5a6; font-size: 1.2em; }
+.floating-text.bleed { color: #8B0000; }
+@keyframes floatUp {
+    0% { transform: translateY(0); opacity: 1; }
+    100% { transform: translateY(-80px); opacity: 0; }
+}
+.event-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1001;
+}
+.event-panel {
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 500px;
+    width: 90%;
+}
+.event-panel h2 { color: #2c3e50; margin-bottom: 20px; }
+.event-panel p { font-size: 1.1em; color: #555; margin-bottom: 25px; }
+.talent-tree { display: flex; justify-content: space-around; gap: 20px; }
+.talent-branch { display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 10px; background-color: #f8f9fa; border-radius: 8px; flex: 1; }
+.talent-branch h4 { margin: 0 0 10px 0; color: #2c3e50; border-bottom: 2px solid #bdc3c7; padding-bottom: 5px; width: 100%; text-align: center; }
+.talent-node { width: 90%; padding: 10px; border: 2px solid #bdc3c7; border-radius: 8px; background-color: #ecf0f1; cursor: pointer; text-align: left; transition: all 0.2s ease; }
+.talent-node:hover { border-color: #3498db; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+.talent-node h5 { margin: 0 0 5px; color: #34495e; }
+.talent-node p { font-size: 0.8em; margin: 2px 0; color: #666; }
+.talent-node .talent-level { font-weight: bold; color: #2980b9; }
+.talent-node.available { border-color: #2ecc71; background-color: #e8f5e9; }
+.talent-node.locked { background-color: #f2f2f2; border-color: #e0e0e0; color: #999; cursor: not-allowed; }
+.talent-node.locked h5, .talent-node.locked p { color: #aaa; }
+.talent-node.maxed-out { border-color: #f39c12; background-color: #fef5e7; }
+.quest-container { background-color: #e8f5e9; padding: 15px; border-radius: 8px; box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1); text-align: left; grid-column: 1; align-self: stretch; overflow-y: auto; }
+.game-container { display: flex; flex-direction: column; text-align: center; grid-column: 2; width: 100%; align-self: stretch; }
+h1 { color: #2c3e50; margin-bottom: 20px; font-size: 2em; }
+.player-area, .enemy-area { flex: 0 0 auto; width: 45%; max-width: 250px; text-align: center; padding: 10px; background-color: #f8f9fa; border-radius: 8px; box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.05); }
+.character { width: 70px; height: 70px; border: 3px solid #34495e; margin: 0 auto 10px; border-radius: 8px; transition: transform 0.1s ease-in-out; }
+.player { background-color: #3498db; box-shadow: 0 0 15px rgba(52, 152, 219, 0.6); }
+.enemy { background-color: crimson; box-shadow: 0 0 15px rgba(231, 76, 60, 0.6); }
+.character.hit { transform: scale(0.9); }
+h2 { color: #34495e; font-size: 1.3em; margin-bottom: 5px; }
+p { color: #555; margin: 3px 0; font-size: 1em; }
+.controls-area {
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+    padding-bottom: 3.5em;
+}
+.message { 
+    width: 100%; 
+    order: 10; 
+    margin-top: 10px;
+    font-size: 1.1em; 
+    font-weight: bold; 
+    color: #333; 
+    min-height: 1.5em; 
+    text-align: center;
+}
+.game-management-buttons { 
+    width: 100%; 
+    order: 11;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+.money-display, .wave-display, .level-display, .sp-display, .xp-display, .reflect-display, .bleed-display, .evasion-display, .mode-display { font-size: 1.1em; color: #4CAF50; font-weight: bold; flex-shrink: 0; }
+.wave-display { color: #8e44ad; }
+.dimension-display { font-size: 0.8em; color: #7f8c8d; margin-left: 5px; font-style: italic; }
+.level-display { color: #2980b9; }
+.sp-display { color: #d35400; }
+.xp-display { color: #7f8c8d; font-size: 0.9em; margin: 0; }
+.reflect-display { color: #e74c3c; font-size: 1em; }
+.bleed-display { color: #8B0000; font-size: 1em; }
+.evasion-display { color: #16a085; font-size: 1em; }
+.mode-display { color: #e67e22; font-size: 0.85em; text-align: right; margin: 0 0 5px 0; }
+.controls-right-corner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+.info-bar-right { text-align: right; }
+.theme-btn {
+    background: none;
+    border: 1px solid #bdc3c7;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    font-size: 1.2em;
+    cursor: pointer;
+    color: #34495e;
+    padding: 0;
+    margin: 0;
+    line-height: 30px;
+    transition: all 0.2s ease;
+}
+.theme-btn:hover {
+    background-color: #ecf0f1;
+    border-color: #3498db;
+}
+.shop-container { display: flex; flex-direction: column; gap: 10px; padding: 15px; background-color: #f0f4f7; border-radius: 8px; box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1); overflow-y: auto; max-height: 80vh; grid-column: 3; align-self: stretch; }
+.shop-container h2 { color: #2c3e50; margin-top: 0; margin-bottom: 15px; font-size: 1.6em; }
+.shop-tabs { display: flex; justify-content: center; margin-bottom: 10px; border-bottom: 1px solid #ddd; padding-bottom: 5px; flex-wrap: wrap;}
+.shop-tabs button { background-color: #ecf0f1; border: 1px solid #bdc3c7; padding: 6px 12px; cursor: pointer; border-radius: 5px 5px 0 0; margin: 2px; font-size: 0.9em; color: #34495e; transition: background-color 0.2s; }
+.shop-tabs button.active { background-color: #3498db; color: white; border-color: #3498db; font-weight: bold; }
+.shop-tabs button:hover:not(.active) { background-color: #dbe4e6; }
+.shop-content { display: none; flex-direction: column; gap: 10px; }
+.shop-content.active { display: flex; }
+.shop-item { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 10px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); position: relative; }
+.shop-item-info { text-align: left; flex-grow: 1; flex-basis: 60%; }
+.shop-item-info h3 { margin: 0 0 3px; color: #34495e; font-size: 1.1em; }
+.shop-item-info p { margin: 0; font-size: 0.8em; color: #666; }
+.shop-item-cost { font-weight: bold; color: #e67e22; margin-right: 10px; font-size: 1em; flex-basis: 35%; text-align: right; }
+.shop-item-sp-cost { font-weight: bold; color: #d35400; margin-right: 10px; font-size: 1em; flex-basis: 35%; text-align: right; }
+.shop-item-current-level { font-weight: bold; color: #2980b9; margin-left: 5px; font-size: 0.9em; }
+.shop-item-uses { font-size: 0.7em; color: #555; font-weight: normal; }
+.shop-item button { flex-basis: 100%; text-align: center; }
+.shop-item .shop-item-buttons { flex-basis: 100%; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.backpack-item { display: flex; justify-content: space-between; align-items: center; background-color: #ffffff; padding: 12px 15px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); }
+.backpack-item-details { display: flex; flex-direction: column; }
+.backpack-item-name { font-weight: bold; color: #34495e; font-size: 1em; }
+.backpack-item-quantity { font-weight: bold; font-size: 1.1em; color: #2980b9; background-color: #ecf0f1; padding: 2px 8px; border-radius: 10px; }
+#weaponArea, #craftingArea { margin-top: 15px; padding-top: 15px; border-top: 2px solid #bdc3c7; }
+#craftingArea h3, #contentBackpack > h3, #weaponArea > h3 { color: #2c3e50; font-size: 1.3em; margin-bottom: 10px; text-align: center; }
+.crafting-selection-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; background-color: #fff; padding: 8px 12px; border-radius: 6px; }
+.crafting-selection-item span { font-size: 0.9em; color: #34495e; flex-basis: 60%; }
+.crafting-selection-item input { width: 50px; text-align: center; border: 1px solid #ccc; border-radius: 4px; padding: 4px; }
+.crafting-preview { background-color: #e8f5e9; border: 1px solid #c8e6c9; padding: 10px; margin-top: 10px; border-radius: 8px; text-align: left; }
+.crafting-preview h4 { margin: 0 0 8px 0; color: #388e3c; }
+.crafting-preview p { font-size: 0.9em; font-weight: bold; color: #424242; margin: 2px 0; }
+.quest-container h2 { color: #2e7d32; margin-top: 0; margin-bottom: 10px; font-size: 1.6em; text-align: center; }
+.quest-item { background-color: #ffffff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08); margin-bottom: 10px; }
+.quest-item.transfer-quest { border: 2px solid #e67e22; box-shadow: 0 2px 8px rgba(230, 126, 34, 0.3); }
+.quest-item h3 { margin: 0 0 5px; color: #388e3c; font-size: 1.1em; }
+.quest-item.transfer-quest h3 { color: #e67e22; }
+.quest-item p { margin: 3px 0; font-size: 0.9em; color: #424242; }
+.quest-progress { font-weight: bold; color: #1976d2; }
+.quest-rewards { font-weight: bold; color: #d35400; }
+.quest-special-condition { font-weight: bold; color: #e74c3c; font-size: 0.85em; }
+.synthesis-item { display: flex; flex-direction: column; background-color: #ffffff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); gap: 8px; }
+.synthesis-output { display: flex; justify-content: center; align-items: center; gap: 10px; font-weight: bold; color: #27ae60; font-size: 1.1em; margin-bottom: 5px; }
+.synthesis-ingredients { font-size: 0.85em; color: #555; text-align: center; border-top: 1px dashed #ddd; border-bottom: 1px dashed #ddd; padding: 8px 0; }
+.synthesis-ingredients span { display: block; }
+.synthesis-cost { text-align: center; font-weight: bold; color: #e67e22; }
+.special-ability {
+    font-weight: bold;
+    color: #27ae60;
+    font-size: 0.9em;
+}
+.shield-display {
+    color: #3498db;
+    font-size: 1em;
+}
+.equipped-relic-area, .relic-synthesis-area, .relic-backpack-area {
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+.equipped-relic-area h3, .relic-synthesis-area h3, .relic-backpack-area h3 {
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 1.2em;
+}
+.relic-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    margin-bottom: 6px;
+    border-left: 5px solid #bdc3c7;
+}
+.relic-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+.relic-name {
+    font-weight: bold;
+    color: #34495e;
+    font-size: 0.9em;}
+.relic-effect {
+    font-size: 0.85em;
+    color: #555;}
+.relic-btn {
+    padding: 4px 8px;
+    font-size: 0.8em;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-left: 10px;}
+.equip-btn { background-color: #27ae60; }
+.equip-btn:hover { background-color: #229954; }
+.unequip-btn { background-color: #e67e22; }
+.unequip-btn:hover { background-color: #d35400; }
+.synth-btn { background-color: #8e44ad; }
+.synth-btn:hover { background-color: #7d3c98; }
+.relic-common { border-left-color: #bdc3c7; }
+.relic-common .relic-name { color: #34495e; }
+.relic-uncommon { border-left-color: #2ecc71; }
+.relic-uncommon .relic-name { color: #27ae60; }
+.relic-rare { border-left-color: #3498db; }
+.relic-rare .relic-name { color: #2980b9; }
+@media (max-width: 1024px) { 
+    .main-layout-container{grid-template-columns: 1fr;padding: 15px; } 
+    .quest-container { grid-column: 1; max-height: 200px; } 
+    .game-container { grid-column: 1; } 
+    .shop-container { max-height: 40vh; grid-column: 1; } 
+    .controls-area { 
+        flex-direction: column; 
+        position: static;
+        padding-bottom: 15px;
+    } 
+    .controls-right-corner { 
+        order: -2; 
+        position: static;
+        width: 100%;
+        justify-content: center;
+    }
+    .money-display, .wave-display, .level-display, .sp-display, .info-bar-right, #attackButton, .game-management-buttons { 
+        width: 100%; 
+        margin-bottom: 8px; 
+        text-align: center; 
+    } 
+    .info-bar-right { position: static; }
+    .message { order: -1; } 
+    .shop-item button.priority-btn { position: static; width: 100%; margin-top: 8px; } 
+    .player-area, .enemy-area { width: 100%; max-width: none; } 
+    .character-selection-panel { max-width: 95%; } 
+    .selection-content { flex-direction: column; } 
+    .difficulty-selection { width: 100%; margin-bottom: 20px; } 
+    .difficulty-options { flex-direction: column; gap: 10px; } 
+    .character-options { width: 100%; justify-content: center; } 
+    .character-card { width: 100%; max-width: 250px; } 
+}
+.character-selection-overlay, .trial-selection-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+.character-selection-panel, .trial-selection-panel { background-color: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: center; max-width: 1200px; width: 90%; max-height: 90vh; overflow-y: auto; }
+.character-selection-panel h2, .trial-selection-panel h2 { color: #34495e; margin-bottom: 25px; font-size: 2em; }
+.selection-content { display: flex; gap: 20px; justify-content: center; align-items: flex-start; flex-wrap: wrap; }
+.difficulty-selection { flex: 0 0 250px; display: flex; flex-direction: column; align-items: center; gap: 15px; padding: 15px; background-color: #f0f4f7; border-radius: 8px; box-shadow: inset 0 0 8px rgba(0,0,0,0.05); }
+.difficulty-selection label { font-size: 1.2em; color: #34495e; font-weight: bold; margin-bottom: 10px; }
+.difficulty-options { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+.difficulty-option { background-color: #f0f4f7; border: 2px solid #ddd; border-radius: 8px; padding: 10px 15px; cursor: pointer; transition: all 0.2s ease; text-align: left; flex: 1; min-width: 180px; }
+.difficulty-option:hover { border-color: #3498db; transform: translateY(-3px); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); }
+.difficulty-option.selected { border-color: #2ecc71; box-shadow: 0 0 10px rgba(46, 204, 113, 0.5); background-color: #e8f5e9; }
+.difficulty-option h4 { margin: 0 0 5px; color: #2c3e50; font-size: 1.1em; }
+.difficulty-option p { font-size: 0.85em; color: #555; margin: 2px 0; }
+.character-options { flex: 1; display: flex; justify-content: flex-start; gap: 10px; flex-wrap: wrap; }
+.character-card { background-color: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 15px; width: 190px; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
+.character-card:hover { border-color: #3498db; transform: translateY(-5px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+.character-card h3 { color: #2c3e50; margin-top: 0; font-size: 1.3em; margin-bottom: 10px; }
+.character-card p { font-size: 0.9em; color: #555; margin: 3px 0; }
+.character-card .difficulty {
+    font-weight: bold;
+    font-size: 0.9em;
+    margin-bottom: 8px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    align-self: flex-start;
+}
+.difficulty-easy { color: #1e8449; background-color: #d5f5e3; }
+.difficulty-medium { color: #b7791f; background-color: #fdebd0; }
+.difficulty-hard { color: #b03a2e; background-color: #fadbd8; }
+.trial-options { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.trial-card { background-color: #f8f9fa; border: 2px solid #ddd; border-radius: 8px; padding: 20px; width: 250px; cursor: pointer; transition: all 0.2s ease; display: flex; flex-direction: column; justify-content: space-between; box-sizing: border-box; }
+.trial-card:hover { border-color: #e67e22; transform: translateY(-5px); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); }
+.trial-card h3 { color: #d35400; margin-top: 0; font-size: 1.5em; margin-bottom: 15px; }
+.trial-card p { font-size: 0.9em; color: #555; margin: 5px 0; text-align: left; }
+.quest-container {
+    display: flex;
+    flex-direction: column;
+}
+.quest-tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #c8e6c9;
+    padding-bottom: 5px;
+    flex-shrink: 0;
+}
+.quest-tabs button {
+    background-color: #f1f8e9;
+    border: 1px solid #c8e6c9;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 5px 5px 0 0;
+    margin: 0 2px;
+    font-size: 0.9em;
+    color: #388e3c;
+    transition: background-color 0.2s;
+}
+.quest-tabs button.active {
+    background-color: #4caf50;
+    color: white;
+    border-color: #4caf50;
+    font-weight: bold;
+}
+.quest-tabs button:hover:not(.active) {
+    background-color: #dcedc8;
+}
+.quest-content-pane {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+.quest-content-pane.active {
+    display: flex;
+}
+.quest-controls {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #c8e6c9;
+    flex-shrink: 0;
+}
+.quest-controls button {
+    width: 100%;
+    padding: 8px;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: white;
+    background-color: #1976d2;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+.quest-controls button:hover:not(:disabled) {
+    background-color: #1565c0;
+}
+.quest-controls button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+.quest-container { 
+    background-color: #e8f5e9; 
+    padding: 15px; 
+    border-radius: 8px; 
+    box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1); 
+    text-align: left; 
+    grid-column: 1; 
+    align-self: stretch; 
+}
+.character-selection-panel {
+    position: relative; 
+}
+.tutorial-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+}
+.tutorial-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: none; 
+    justify-content: center;
+    align-items: center;
+    z-index: 1002; 
+}
+.tutorial-panel {
+    background-color: #fff;
+    padding: 25px 40px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    max-width: 650px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    border: 3px solid #3498db;
+}
+.tutorial-panel .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: transparent;
+    border: none;
+    font-size: 2em;
+    font-weight: bold;
+    color: #95a5a6;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+.tutorial-panel .close-btn:hover {
+    color: #2c3e50;
+}
+.tutorial-panel h2 {
+    text-align: center;
+    color: #2980b9;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #ecf0f1;
+    padding-bottom: 10px;
+}
+.tutorial-content h3 {
+    color: #34495e;
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+.tutorial-content p, .tutorial-content li {
+    font-size: 1.05em;
+    line-height: 1.6;
+    color: #555;
+}
+.tutorial-content ul {
+    padding-left: 25px;
+    list-style-type: '➤  ';
+}
+.tutorial-content strong {
+    color: #e67e22;
+}
+.settlement-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(20, 20, 30, 0.9);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1003;
+    color: #f0f0f0;
+}
+.settlement-panel {
+    background-color: #2c3e50;
+    padding: 40px;
+    border-radius: 15px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    max-width: 550px;
+    width: 90%;
+    border: 3px solid #f39c12;
+}
+.settlement-panel h2 {
+    color: #f39c12;
+    font-size: 2.5em;
+    margin-bottom: 15px;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.5);
+}
+.settlement-panel p {
+    color: #bdc3c7;
+    font-size: 1.1em;
+    line-height: 1.6;
+}
+.settlement-stats, .settlement-attributes {
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    padding: 15px 20px;
+    margin: 25px 0;
+    border: 1px solid #34495e;
+}
+.settlement-stats h3, .settlement-attributes h3 {
+    color: #ecf0f1;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #7f8c8d;
+    padding-bottom: 8px;
+}
+.settlement-stats p, .settlement-attributes p {text-align: left;margin: 8px 0;font-size: 1.05em;}
+.settlement-stats span, .settlement-attributes span {color: #2ecc71;font-weight: bold;float: right;}
+body.dark-mode {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+}
+.dark-mode .main-layout-container,
+.dark-mode .character-selection-panel,
+.dark-mode .trial-selection-panel,
+.dark-mode .event-panel,
+.dark-mode .tutorial-panel,
+.dark-mode .custom-modal-panel {
+    background-color: #2c3e50;
+    color: #e0e0e0;
+}
+.dark-mode.player-low-health .main-layout-container {
+    background: radial-gradient(ellipse at center,  rgba(44,62,80,1) 0%,rgba(44,62,80,1) 52%,rgba(112,61,87,1) 75%,rgba(255,38,38,1) 100%); 
+}
+.dark-mode.battle-will-active .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(44,62,80,1) 0%,rgba(44,62,80,1) 45%,rgba(130,113,71,1) 64%,rgba(255,160,45,1) 100%);
+}
+.dark-mode.exhausted .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(44,62,80,1) 0%,rgba(125,85,178,1) 81%,rgba(168,73,163,1) 100%);
+}
+.dark-mode.final-boss-battle .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(44,62,80,1) 0%,rgba(124,216,249,1) 100%);
+}
+.dark-mode h1, .dark-mode h2, .dark-mode h3, .dark-mode h4, .dark-mode h5 {
+    color: #ecf0f1;
+}
+.dark-mode p, .dark-mode li, .dark-mode label, .dark-mode span,
+.dark-mode .custom-modal-panel p {
+    color: #bdc3c7;
+}
+.dark-mode .player-area, .dark-mode .enemy-area,
+.dark-mode .character-card, .dark-mode .trial-card, .dark-mode .difficulty-option {
+    background-color: #34495e;
+    border-color: #566573;
+}
+.dark-mode .shop-container, .dark-mode .quest-container, .dark-mode .difficulty-selection {
+    background-color: #233140;
+}
+.dark-mode .shop-item, .dark-mode .backpack-item, .dark-mode .quest-item,
+.dark-mode .talent-node, .dark-mode .synthesis-item, .dark-mode .relic-item,
+.dark-mode .crafting-selection-item {
+    background-color: #34495e;
+    border-color: #566573;
+}
+.dark-mode .crafting-preview {
+    background-color: #2c3e50;
+    border-color: #4CAF50;
+}
+.dark-mode .shop-tabs button, .dark-mode .quest-tabs button {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    border-color: #566573;
+}
+.dark-mode .shop-tabs button.active, .dark-mode .quest-tabs button.active {
+    background-color: #3498db;
+    border-color: #3498db;
+    color: #fff;
+}
+.dark-mode .talent-node.locked {
+    background-color: #2c3e50;
+    border-color: #4a617a;
+}
+.dark-mode .talent-node.locked h5, .dark-mode .talent-node.locked p {
+    color: #7f8c8d;
+}
+.dark-mode input[type="number"] {
+    background-color: #2c3e50;
+    color: #ecf0f1;
+    border: 1px solid #566573;
+}
+.dark-mode .message { color: #f1c40f; }
+.dark-mode .theme-btn {
+    color: #f1c40f;
+    border-color: #7f8c8d;
+}
+.dark-mode .theme-btn:hover {
+    background-color: #34495e;
+    border-color: #f1c40f;
+}
+.dark-mode .talent-branch h4 {
+    color: #ecf0f1;
+    background-color: transparent;
+    border-bottom: 2px solid #566573;
+    padding-top: initial;
+    border-radius: initial;
+}
+.dark-mode #weaponArea .crafting-preview,
+.dark-mode #craftingArea .crafting-selection-item {
+    background-color: #2c3e50 !important;
+    border: 1px solid #4CAF50 !important;
+}
+.dark-mode #craftingArea .crafting-selection-item label {
+    color: #ecf0f1;
+}
+.dark-mode .relic-name {
+    color: #ecf0f1 !important;
+}
+.dark-mode .relic-common {
+    border-left-color: #bdc3c7;
+}
+.dark-mode .relic-uncommon {
+    border-left-color: #2ecc71;
+}
+.dark-mode .relic-rare {
+    border-left-color: #3498db;
+}
+.dark-mode #contentBackpack > h3,
+.dark-mode #weaponArea > h3,
+.dark-mode #craftingArea > h3 {
+    color: #ecf0f1;
+}
+.dark-mode #playerHP[style*="color: green"],
+.dark-mode #enemyHP[style*="color: green"] {
+    color: #2ecc71 !important;
+}
+body,
+.main-layout-container, .character-selection-panel, .trial-selection-panel, .event-panel, .tutorial-panel, .custom-modal-panel,
+.player-area, .enemy-area, .character-card, .trial-card, .difficulty-option,
+.shop-container, .quest-container, .difficulty-selection,
+.shop-item, .backpack-item, .quest-item, .talent-node, .synthesis-item, .relic-item, .crafting-selection-item,
+.crafting-preview,
+.shop-tabs button, .quest-tabs button,
+.theme-btn,
+.message,
+input[type="number"],
+h1, h2, h3, h4, h5,
+p, li, label, span {
+    transition: background-color 0.3s ease-in-out, 
+                color 0.3s ease-in-out, 
+                border-color 0.3s ease-in-out,
+                border-left-color 0.3s ease-in-out;
+}
+body.final-boss-battle .main-layout-container,
+body.player-low-health .main-layout-container,
+body.battle-will-active .main-layout-container,
+body.exhausted .main-layout-container,
+body.player-stunned .main-layout-container {
+    transition: background 0.5s ease-in-out;
+}
+.dark-mode .talent-node.maxed-out {
+    border-color: #2ecc71; 
+    background-color: #2c3e50; 
+}
+.dark-mode .talent-branch {
+    background-color: #233140; 
+}
+.dark-mode .difficulty-easy { color: #82e0aa; background-color: #1e4d2b; }
+.dark-mode .difficulty-medium { color: #f5b041; background-color: #5e481b; }
+.dark-mode .difficulty-hard { color: #f1948a; background-color: #5e2129; }
+.trial-timer {
+    color: #e74c3c;
+}
+.dark-mode .trial-timer {
+    color: #ff5252;
+}
+.affixes-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    border-top: 1px dashed #ccc;
+    padding-top: 5px;
+}
+.affix-item {
+    font-size: 0.8em;
+    text-align: left;
+}
+.affix-item strong {
+    color: #c0392b;
+}
+.dark-mode .affixes-container {
+    border-top-color: #566573;
+}
+.dark-mode .affix-item strong {
+    color: #e74c3c;
+}
+.environment-display {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 5px;
+    color: #27ae60;
+    font-weight: bold;
+    font-size: 0.85em;
+    margin-bottom: 5px;
+    text-align: right;
+}
+.dark-mode .environment-display {
+    color: #2ecc71;
+}
+.dark-mode.lightning-field .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(44,62,80,1) 0%,rgba(237,247,123,1) 100%);
+}
+.dark-mode.primal-field .main-layout-container {
+    background: linear-gradient(to bottom,  rgba(44,62,80,1) 0%,rgba(125,247,123,1) 100%);
+}
+.detail-btn {
+    padding: 6px 12px;
+    font-size: 0.9em;
+}
+.custom-modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1010;
+}
+.custom-modal-panel {
+    background-color: #fff;
+    padding: 25px 35px;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    max-width: 450px;
+    width: 90%;
+}
+.custom-modal-panel h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: #2c3e50;
+}
+.custom-modal-panel p {
+    margin-bottom: 25px;
+    font-size: 1.1em;
+    color: #555;
+    white-space: pre-wrap;
+}
+.custom-modal-options {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}

@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="zh-TW"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v0.5</title>
+    <link rel="stylesheet" href="style.css">
+</head><body>
+    <div class="tutorial-overlay" id="tutorialOverlay">
+        <div class="tutorial-panel">
+            <button class="close-btn" id="closeTutorialBtn">&times;</button>
+            <h2>遊戲教學</h2>
+            <div class="tutorial-content">
+                <h3>核心玩法</h3>
+                <p>歡迎來到方塊RPG！你的目標是擊敗一波又一波的敵人，不斷強化自己，挑戰極限。</p>
+                <ul>
+                    <li>點擊螢幕中央下方的 <strong>「攻擊！」</strong> 按鈕開始戰鬥。</li>
+                    <li>戰鬥會自動進行，速度快的一方先攻擊。</li>
+                    <li>擊敗敵人可以獲得金錢、經驗值和各種「碎片」材料。</li>
+                </ul>
+                <h3>左側：任務面板</h3>
+                <p>這裡會顯示你可以完成的任務。完成任務是獲得額外獎勵的重要途徑。</p>
+                <ul>
+                    <li><strong>普通任務：</strong>提供常規的擊殺或收集目標。你可以花費金錢刷新任務列表。</li>
+                    <li><strong>轉職任務：</strong>當你達到特定等級，這裡會出現強大的轉職任務。完成後你的方塊將會轉職！</li>
+                </ul>
+                <h3>右側：商店面板</h3>
+                <p>這是你變強的核心區域。你可以切換不同的分頁來進行強化：</p>
+                <ul>
+                    <li><strong>升級：</strong>花費金錢直接購買永久的屬性加成。</li>
+                    <li><strong>天賦：</strong>使用升級獲得的技能點來解鎖強大的被動效果。</li>
+                    <li><strong>合成：</strong>將多餘的碎片合成為稀有的「暗影碎片」，用於打造特殊武器。</li>
+                    <li><strong>招式：</strong>學習和升級主動技能，讓你在戰鬥中更有策略。</li>
+                    <li><strong>背包：</strong>查看你擁有的材料，並在這裡進行最重要的<strong>「武器打造」</strong>！收集8個碎片或依照特殊配方來打造獨一無二的武器。</li>
+                    <li><strong>遺物：</strong>裝備、合成更強大的遺物來獲得百分比屬性加成。</li>
+                </ul>
+                 <h3>提示</h3>
+                <p>遊戲不會自動儲存你的進度，所以你必須手動儲存/讀取。祝你好運，方塊勇者！</p>
+            </div>
+        </div>
+    </div>
+    <div class="event-overlay" id="eventOverlay">
+        <div class="event-panel" id="eventPanel">
+            <h2 id="eventTitle"></h2>
+            <p id="eventDescription"></p>
+            <div class="event-options" id="eventOptions"></div>
+        </div>
+    </div>
+    <div class="settlement-overlay" id="settlementOverlay">
+        <div class="settlement-panel" id="settlementPanel">
+            <h2>挑戰成功！</h2>
+            <p>你擊敗了最終的恐怖，為方塊世界帶來了和平。</p>
+            <div class="settlement-stats">
+                <h3>最終成績</h3>
+                <p>通關波數: <span id="wavesCleared"></span></p>
+                <p>最終等級: <span id="finalLevel"></span></p>
+                <p>最終職業: <span id="finalProfession"></span></p>
+                <p>總消耗金錢: <span id="totalMoneySpent"></span></p>
+            </div>
+            <div class="settlement-attributes">
+                <h3>本輪最終屬性</h3>
+                <p>最大生命值: <span id="finalMaxHP"></span></p>
+                <p>攻擊力: <span id="finalAttack"></span></p>
+                <p>速度: <span id="finalSpeed"></span></p>
+            </div>
+            <p>感謝你的遊玩！</p>
+            <button onclick="resetGame()">開啟新輪迴</button>
+        </div>
+    </div>
+    <div class="character-selection-overlay" id="characterSelectionOverlay">
+        <div class="character-selection-panel">
+            <button id="showTutorialBtn" class="tutorial-button">遊戲教學</button>
+            <h2>選擇你的初始方塊與難度</h2>
+            <div class="selection-content">
+                <div class="difficulty-selection">
+                    <label>選擇遊戲難度：</label>
+                    <div class="difficulty-options">
+                        <div class="difficulty-option selected" data-difficulty="easy"><h4>簡單模式</h4><p>敵人強度: 100%</p><p>金錢獎勵: 150%</p></div>
+                        <div class="difficulty-option" data-difficulty="normal"><h4>普通模式</h4><p>敵人強度: 120%</p><p>金錢獎勵: 100%</p></div>
+                        <div class="difficulty-option" data-difficulty="hard"><h4>困難模式</h4><p>敵人強度: 150%</p><p>金錢獎勵: 80%</p></div>
+                    </div>
+                </div>
+                <div class="character-options">
+                    <div class="character-card"><button onclick="selectCharacter('swordsman')">選擇</button><h3>劍士方塊</h3><p class="difficulty difficulty-easy">難度：簡單</p><p>生命值: 80</p><p>攻擊力: 50~100</p><p>速度: 5</p><p>爆擊機率: 5%</p><p>爆擊傷害: 2.0x</p><p class="bleed-display">流血機率: 0%</p></div>
+                    <div class="character-card"><button onclick="selectCharacter('shieldman')">選擇</button><h3>盾士方塊</h3><p class="difficulty difficulty-hard">難度：困難</p><p>生命值: 300</p><p>攻擊力: 5~10</p><p>速度: 5</p><p>爆擊機率: 5%</p><p>爆擊傷害: 2.0x</p><p class="reflect-display">反傷: 0%</p></div>
+                    <div class="character-card"><button onclick="selectCharacter('berserker')">選擇</button><h3>狂戰方塊</h3><p class="difficulty difficulty-hard">難度：困難</p><p>生命值: 50</p><p>攻擊力: 10~30</p><p>速度: 5</p><p>爆擊機率: 50%</p><p>爆擊傷害: 6.0x</p></div>
+                    <div class="character-card"><button onclick="selectCharacter('variant')">選擇</button><h3>變化方塊</h3><p class="difficulty difficulty-medium">難度：中等</p><p>生命值: 100</p><p>攻擊力: 20~50</p><p>速度: 5</p><p>爆擊機率: 10%</p><p>爆擊傷害: 3.0x</p><p class="special-ability">特殊: 防禦姿態</p></div>
+                    <div class="character-card"><button onclick="selectCharacter('assassin')">選擇</button><h3>刺客方塊</h3><p class="difficulty difficulty-medium">難度：中等</p><p>生命值: 60</p><p>攻擊力: 0~200</p><p>(升級不增加最低傷害)</p><p class="no-crit">無爆擊</p><p class="no-heal">無法回血</p><p>速度: 10</p></div>
+                    <div class="character-card"><button onclick="selectCharacter('shortlived')">選擇</button><h3>短命方塊</h3><p class="difficulty difficulty-easy">難度：簡單</p><p>生命值: 1 (x10)</p><p>攻擊力: 50~80</p><p>速度: 15</p><p>爆擊機率: 5%</p><p>爆擊傷害: 3.0x</p><p class="special-ability">特殊: 損失血條換取攻擊力</p></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="trial-selection-overlay" id="trialSelectionOverlay" style="display: none;">
+        <div class="trial-selection-panel">
+            <h2>選擇挑戰模式</h2>
+            <div id="trialOptionsContainer" class="trial-options">
+                <!-- Trial options will be injected here by JS -->
+            </div>
+        </div>
+    </div>
+    <div class="custom-modal-overlay" id="customModalOverlay">
+        <div class="custom-modal-panel" id="customModalPanel">
+            <h3 id="customModalTitle"></h3>
+            <p id="customModalMessage"></p>
+            <div class="custom-modal-options" id="customModalOptions"></div>
+        </div>
+    </div>
+    <div class="main-layout-container">
+        <div class="quest-container">
+            <h2>任務</h2>
+            <div class="quest-tabs">
+                <button id="tabNormalQuests" class="active">普通任務</button>
+                <button id="tabTransferQuests">轉職任務</button>
+            </div>
+            <div id="contentNormalQuests" class="quest-content-pane active">
+                <div id="normalQuestList"><p>目前沒有任務。</p></div>
+            </div>
+            <div id="contentTransferQuests" class="quest-content-pane">
+                <div id="transferQuestList"><p>目前沒有可用的轉職任務。</p></div>
+            </div>
+            <div class="quest-controls">
+                <button id="refreshQuestsBtn">刷新任務 (300 金錢)</button>
+            </div>
+        </div>
+        <div class="game-container">
+            <h1>藍方塊 vs 紅方塊</h1>
+            <div class="battle-area" id="battleArea">
+                <div class="player-area">
+                    <div class="character player" id="playerChar"></div>
+                    <h2 id="playerProfessionTitle">你的方塊</h2>
+                    <p>生命值: <span id="playerHP"></span></p>
+                    <p>攻擊力: <span><span id="playerMinATK"></span> - <span id="playerMaxATK"></span></span></p>
+                    <p>速度: <span id="playerSpeed"></span></p>
+                    <p id="playerCritChanceDisplay"><span >爆擊機率: <span id="playerCritChance"></span>%</span></p>
+                    <p id="playerCritDamageDisplay"><span>爆擊傷害: <span id="playerCritDamage"></span>x</span></p>
+                    <p id="playerEvasionDisplay" class="evasion-display">閃避: <span id="playerEvasion"></span>%</p>
+                    <p id="playerReflectDamageDisplay" class="reflect-display" style="display: none;">反傷: <span id="playerReflectDamage"></span>%</p>
+                    <p id="playerBleedDisplay" class="bleed-display" style="display: none;">流血機率: <span id="playerBleedChance"></span>% (傷害: <span id="playerBleedDamage"></span>%)</p>
+                    <p id="playerShieldStatus" class="shield-display" style="display: none;">護盾: <span id="playerShield">0</span></p>
+                </div>
+                <div class="enemy-area">
+                    <div class="character enemy" id="enemyChar"></div>
+                    <h2><span id="enemyName">敵人方塊</span></h2>
+                    <p>生命值: <span id="enemyHP"></span></p>
+                    <p>攻擊力: <span><span id="enemyMinATK"></span> - <span id="enemyMaxATK"></span></span></p>
+                    <p>速度: <span id="enemySpeed"></span></p>
+                    <p id="enemyEvasionDisplay" class="evasion-display" style="display: none;">閃避: <span id="enemyEvasion"></span>%</p>
+                    <p id="enemyBleedStatus" class="bleed-display" style="display: none;">流血: <span id="enemyBleedTurns">0</span> 回合 (<span id="enemyBleedDamageApplied">0</span> 傷害)</p>
+                    <div id="enemyAffixesContainer" class="affixes-container" style="display: none; margin-top: 5px;"></div>
+                </div>
+            </div>
+            <div class="controls-area">
+                <p class="money-display">金錢: <span id="currentMoney">0</span></p>
+                <p class="wave-display">波次: <span id="currentWave">1</span><span id="dimensionDisplay" class="dimension-display"></span></p>
+                <p id="shortLivedTrialTimerDisplay" class="wave-display trial-timer" style="display: none;">倒數計時: <span id="shortLivedTrialTime">60</span>s</p>
+                <button id="attackButton">攻擊！</button>
+                <p class="level-display">等級: <span id="playerLevel">1</span></p>
+                <p class="sp-display">技能點: <span id="playerSP">0</span></p>
+                <div class="controls-right-corner">
+                    <button id="themeToggleBtn" class="theme-btn">🌙</button>
+                    <button id="environmentDetailBtn" class="detail-btn" style="display: none;">詳細</button>
+                    <div class="info-bar-right">
+                        <div class="environment-display" id="environmentDisplay" style="display: none;">
+                            <span id="environmentName"></span>
+                        </div>
+                        <p class="mode-display" id="gameModeDisplay"></p>
+                        <p class="xp-display">經驗值: <span id="playerXP">0</span>/<span id="playerNextLevelXP">100</span></p>
+                    </div>
+                </div>
+                <div class="game-management-buttons">
+                    <button id="saveButton">儲存進度</button>
+                    <button id="loadButton">讀取進度</button>
+                    <button id="resetButton">重置進度</button>
+                </div>
+                <p class="message" id="gameMessage">點擊「攻擊」開始戰鬥！</p>
+            </div>
+        </div>
+        <div class="shop-container" id="shopContainer">
+            <h2>商店</h2>
+            <div class="shop-tabs">
+                <button id="tabUpgrades" class="active">升級</button>
+                <button id="tabTalents">天賦</button>
+                <button id="tabSynthesis">合成</button>
+                <button id="tabAbilities">招式</button>
+                <button id="tabBackpack">背包</button>
+                <button id="tabRelics">遺物</button>
+            </div>
+            <div id="contentUpgrades" class="shop-content active">
+                <div class="shop-item" id="randomUpgradeShopItem" style="display: none;"><div class="shop-item-info"><h3>隨機強化</h3><p>隨機提升一項屬性</p></div><span class="shop-item-cost">50 金錢</span><button class="buy-btn random-upgrade-btn" id="buyRandomUpgrade">賭一把！</button></div>
+                <div class="shop-item" id="attackUpgradeShopItem"><div class="shop-item-info"><h3>攻擊力提升</h3><p id="attackUpgradeDescription">永久提升攻擊力 5 點</p></div><span class="shop-item-cost" id="attackUpgradeCost">100 金錢</span><button class="buy-btn" id="buyAttack">購買</button></div>
+                <div class="shop-item" id="maxHPUpgradeShopItem"><div class="shop-item-info"><h3>血量上限提升</h3><p id="maxHPUpgradeDescription">永久提升血量上限 20 點</p></div><span class="shop-item-cost" id="maxHPUpgradeCost">120 金錢</span><button class="buy-btn" id="buyMaxHP">購買</button></div>
+                <div class="shop-item" id="speedUpgradeShopItem"><div class="shop-item-info"><h3>速度提升</h3><p>永久提升速度 1 點</p></div><span class="shop-item-cost">80 金錢</span><button class="buy-btn" id="buySpeed">購買</button></div>
+                <div class="shop-item" id="evasionShopItem"><div class="shop-item-info"><h3>閃避提升</h3><p>永久提升閃避 1%</p></div><span class="shop-item-cost">1000 金錢</span><button class="buy-btn" id="buyEvasion">購買</button></div>
+                <div class="shop-item" id="critDamageShopItem"><div class="shop-item-info"><h3>爆擊傷害提升</h3><p>永久提升爆擊傷害 0.1x</p></div><span class="shop-item-cost">50 金錢</span><button class="buy-btn" id="buyCritDamage">購買</button></div>
+                <div class="shop-item" id="healShopItem"><div class="shop-item-info"><h3>回復血量</h3><p>回復 50 點生命值 (不超過上限)</p></div><span class="shop-item-cost">30 金錢</span><button class="buy-btn" id="buyHeal">購買</button></div>
+                <div class="shop-item" id="xpShopItem"><div class="shop-item-info"><h3>經驗值購買</h3><p>獲得 150 經驗值</p></div><span class="shop-item-cost">50 金錢</span><button class="buy-btn" id="buyXP">購買</button></div>
+                <div class="shop-item" id="reflectDamageShopItem" style="display: none;"><div class="shop-item-info"><h3>反傷提升</h3><p>永久提升反傷 3%</p></div><span class="shop-item-cost">50 金錢</span><button class="buy-btn" id="buyReflectDamage">購買</button></div>
+                <div class="shop-item" id="bleedShopItem" style="display: none;"><div class="shop-item-info"><h3>流血提升</h3><p>流血機率 +1%，傷害 +1%</p></div><span class="shop-item-cost">50 金錢</span><button class="buy-btn" id="buyBleed">購買</button></div>
+            </div>
+            <div id="contentTalents" class="shop-content">
+                <p>在這裡使用技能點(SP)來解鎖強大的永久被動效果。</p>
+                <div id="talentTreeContainer" class="talent-tree"></div>
+            </div>
+            <div id="contentSynthesis" class="shop-content">
+                <p>將低級碎片合成為更強大的碎片。</p>
+            </div>
+            <div id="contentAbilities" class="shop-content"></div>
+            <div id="contentBackpack" class="shop-content"><p>你的背包是空的。</p></div>
+            <div id="contentRelics" class="shop-content"></div>
+        </div></div>
+    <script src="js/game-data.js"></script>
+    <script src="js/persistence.js"></script>
+    <script src="js/ui-update.js"></script>
+    <script src="js/quest-system.js"></script>
+    <script src="js/event-system.js"></script>
+    <script src="js/shop-systems.js"></script>
+    <script src="js/game-logic.js"></script>
+    <script src="js/boss.js"></script>
+    <script src="js/main.js"></script>
+</body></html>
