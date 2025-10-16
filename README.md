@@ -1,0 +1,2 @@
+# CubeRPG
+the CubeRPG (Chinese)
