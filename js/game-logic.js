@@ -14,29 +14,32 @@ function getPlayerEffectiveStats() {
         moneyBonusPercent: (player.moneyBonusPercent || 0) * 100,
         xpBonusPercent: (player.xpBonusPercent || 0) * 100
     };
-    if (player.equippedRelic) {
-        const relic = player.equippedRelic;
-        const bonus = relic.bonus;
-        switch (relic.stat) {
-            case 'maxHp':
-            case 'attack':
-            case 'speed':
-            case 'critDamage':
-                const multiplier = 1 + bonus / 100;
-                if (relic.stat === 'maxHp') stats.maxHp = Math.round(stats.maxHp * multiplier);
-                if (relic.stat === 'attack') {
-                    stats.attackMin = Math.round(stats.attackMin * multiplier);
-                    stats.attackMax = Math.round(stats.attackMax * multiplier);
-                }
-                if (relic.stat === 'speed') stats.speed = parseFloat((stats.speed * multiplier).toFixed(1));
-                if (relic.stat === 'critDamage') stats.critDamage = parseFloat((stats.critDamage * multiplier).toFixed(1));
-                break;
-            case 'critChance': stats.critChance += bonus; break;
-            case 'evasion': stats.evasion += bonus; break;
-            case 'reflectDamage': stats.reflectDamage += bonus; break;
-            case 'bleedChance': stats.bleedChance += bonus; break;
-            case 'moneyBonus': stats.moneyBonusPercent += bonus; break;
-            case 'xpBonus': stats.xpBonusPercent += bonus; break;
+    // 若本場敵人有遺忘詞綴，遺物無效
+    if (!(currentEnemy && currentEnemy.forgetRelics)) {
+        if (player.equippedRelic) {
+            const relic = player.equippedRelic;
+            const bonus = relic.bonus;
+            switch (relic.stat) {
+                case 'maxHp':
+                case 'attack':
+                case 'speed':
+                case 'critDamage':
+                    const multiplier = 1 + bonus / 100;
+                    if (relic.stat === 'maxHp') stats.maxHp = Math.round(stats.maxHp * multiplier);
+                    if (relic.stat === 'attack') {
+                        stats.attackMin = Math.round(stats.attackMin * multiplier);
+                        stats.attackMax = Math.round(stats.attackMax * multiplier);
+                    }
+                    if (relic.stat === 'speed') stats.speed = parseFloat((stats.speed * multiplier).toFixed(1));
+                    if (relic.stat === 'critDamage') stats.critDamage = parseFloat((stats.critDamage * multiplier).toFixed(1));
+                    break;
+                case 'critChance': stats.critChance += bonus; break;
+                case 'evasion': stats.evasion += bonus; break;
+                case 'reflectDamage': stats.reflectDamage += bonus; break;
+                case 'bleedChance': stats.bleedChance += bonus; break;
+                case 'moneyBonus': stats.moneyBonusPercent += bonus; break;
+                case 'xpBonus': stats.xpBonusPercent += bonus; break;
+            }
         }
     }
 
@@ -461,13 +464,32 @@ async function startBattleTurn() {
   gameMessage.textContent += ' 回合結束。'; isBattleInProgress = false; attackButton.disabled = false; updateDisplay();
 }
 function handleEnemyDefeat(enemyName, inOneTurn, isCounterKill = false) {
+    // 交換詞綴：擊敗時標記
+    if (currentEnemy.affixes) {
+        currentEnemy.affixes.forEach(affix => {
+            if (affix.onDefeat) {
+                affix.onDefeat(currentEnemy);
+            }
+        });
+    }
     if (currentEnemy.affixes) {
         currentEnemy.affixes.forEach(affix => {
             if (affix.onDeath) {
                 affix.onDeath(currentEnemy, player);
-                if (player.hp <= 0 && !(activeTrial && activeTrial.id === 'swordsmanAttack')) {
-                     endGame('你被敵人的復仇擊敗了...');
-                     return;
+                // 修正短命方塊被荊棘/復仇一次擊敗的問題
+                if (player.hp <= 0 && player.profession && player.profession.includes("短命方塊") && player.bars > 1 && !(activeTrial && activeTrial.id === 'swordsmanAttack')) {
+                    // 觸發短命方塊血條損失而非直接死亡
+                    const lossResult = handleShortLivedBarLoss('你被敵人的復仇擊敗了...');
+                    gameMessage.textContent += lossResult.message;
+                    if (lossResult.battleOver) {
+                        endGame(lossResult.message);
+                        return;
+                    } else {
+                        player.hp = player.maxHp;
+                    }
+                } else if (player.hp <= 0 && !(activeTrial && activeTrial.id === 'swordsmanAttack')) {
+                    endGame('你被敵人的復仇擊敗了...');
+                    return;
                 }
             }
         });
@@ -526,6 +548,13 @@ function handleEnemyDefeat(enemyName, inOneTurn, isCounterKill = false) {
     let fragmentMultiplier = (currentEnemy.affixes && currentEnemy.affixes.length > 0) ? 2 : 1;
     const effectiveStats = getPlayerEffectiveStats();
     let moneyGained = Math.round(currentEnemy.moneyReward * gameDifficulty.moneyMultiplier * (1 + effectiveStats.moneyBonusPercent / 100 + (player.weaponMoneyBonus || 0)));
+    // 交換詞綴：擊敗時交換金錢與經驗
+    if (currentEnemy.exchangeReward) {
+        const tmp = moneyGained;
+        moneyGained = xpGained;
+        xpGained = tmp;
+        gameMessage.textContent += ' [交換] 詞綴觸發，金錢與經驗已交換！';
+    }
     if (currentEnvironment && currentEnvironment.name === "原始場地") {
         moneyGained = Math.round(moneyGained * 1.3);
     }
@@ -654,11 +683,27 @@ async function performAction(actor, target, playerAction) {
             });
         }
         if (player.hp <= 0) {
-            checkFutureEvents(false);
-            endGame(`你被敵人的反傷擊敗了。`);
-            result.battleOver = true;
-            updateDisplay();
-            return result;
+            // 修正短命方塊被荊棘等反傷一次擊敗的問題
+            if (player.profession && player.profession.includes("短命方塊") && player.bars > 1 && !(activeTrial && activeTrial.id === 'swordsmanAttack')) {
+                const lossResult = handleShortLivedBarLoss('你被敵人的反傷擊敗了。');
+                gameMessage.textContent += lossResult.message;
+                if (lossResult.battleOver) {
+                    checkFutureEvents(false);
+                    endGame(lossResult.message);
+                    result.battleOver = true;
+                    updateDisplay();
+                    return result;
+                } else {
+                    player.hp = player.maxHp;
+                    updateDisplay();
+                }
+            } else {
+                checkFutureEvents(false);
+                endGame(`你被敵人的反傷擊敗了。`);
+                result.battleOver = true;
+                updateDisplay();
+                return result;
+            }
         }
         message = performPlayerAttack(target, playerAction); 
     } else { 
@@ -689,6 +734,14 @@ function performPlayerAttack(defender, action) {
   const effectiveStats = getPlayerEffectiveStats();
   if (defender.evasion && Math.random() * 100 < defender.evasion) {
       showFloatingText('閃避!', enemyChar, 'miss');
+      // 反制詞綴觸發
+      if (defender.affixes) {
+          defender.affixes.forEach(affix => {
+              if (affix.onEvade) {
+                  affix.onEvade(defender, player);
+              }
+          });
+      }
       return `你的攻擊被${defender.name}閃避了！`;
   }
   if (action === "drawSwordAttack") {
@@ -712,7 +765,7 @@ function performPlayerAttack(defender, action) {
       player.isDrawingSword = true;
       message += ` 你開始蓄力，本回合不攻擊！`;
   }
-  else if (action === "swordLightAttack") {
+    else if (action === "swordLightAttack") {
       const damage = Math.round(effectiveStats.attackMin * allAbilities["劍光"].getDamagePercentage(player.abilities["劍光"].level));
       defender.hp -= damage;
       showFloatingText(`-${damage}`, enemyChar, 'damage');
@@ -729,15 +782,15 @@ function performPlayerAttack(defender, action) {
       showFloatingText(`-${damage}`, enemyChar, 'damage');
       message += `你以肉眼難見的速度移動，對${defender.name}造成了 ${damage} 點傷害！`;
   } else {
-      let baseMinAttack = effectiveStats.attackMin + player.tempAttackMin + player.bonusMinAttack;
+    let baseMinAttack = effectiveStats.attackMin + player.tempAttackMin + player.bonusMinAttack;
       if (player.profession.includes("刺客") && (player.minDamageBonusPercentOfMax || 0) > 0) {
         baseMinAttack += Math.round(effectiveStats.attackMax * player.minDamageBonusPercentOfMax);
       }
-      let baseDamage = player.tempAttackToMax ? (effectiveStats.attackMax + player.tempAttackMax) : getRandomDamage(baseMinAttack, effectiveStats.attackMax + player.tempAttackMax);
+    let baseDamage = player.tempAttackToMax ? (effectiveStats.attackMax + player.tempAttackMax) : getRandomDamage(baseMinAttack, effectiveStats.attackMax + player.tempAttackMax);
       if (currentTurnAbilityApplied === '猛擊') {
           baseDamage *= allAbilities['猛擊'].getDamageMultiplier(player.abilities['猛擊'].level);
       }
-      let finalDamage = baseDamage;
+    let finalDamage = baseDamage;
       let isCrit = false;
       if (isCriticalHit(effectiveStats.critChance + player.tempCritChance)) {
           finalDamage *= (effectiveStats.critDamage + (player.bonusCritDamage || 0));
@@ -768,6 +821,18 @@ function performPlayerAttack(defender, action) {
                   finalDamage = affix.applyIncomingDamage(finalDamage);
               }
           });
+      }
+      // 不屈詞綴：致死傷害時剩1hp
+      if (defender.affixes && finalDamage >= defender.hp) {
+          let undyingTriggered = false;
+          defender.affixes.forEach(affix => {
+              if (affix.onTakeFatalDamage && affix.onTakeFatalDamage(defender, finalDamage)) {
+                  undyingTriggered = true;
+              }
+          });
+          if (undyingTriggered) {
+              finalDamage = defender.hp - 1;
+          }
       }
 
       if (player.damagePenaltyPercent > 0) {
@@ -836,6 +901,14 @@ function performPlayerAttack(defender, action) {
           if (player.profession.includes("劍士") && isBleedTriggered(effectiveStats.bleedChance)) {
               if (!defender.affixes || !defender.affixes.some(a => a.name === '韌性')) {
                   enemyBleedStatusData = { baseDamage: finalDamage, damagePercentage: player.bleedDamagePercentage, turnsRemaining: 3 };
+                  // 時緩詞綴：負面狀態只持續一回合
+                  if (defender.affixes) {
+                      defender.affixes.forEach(affix => {
+                          if (affix.onStatusApply) {
+                              affix.onStatusApply(defender, enemyBleedStatusData);
+                          }
+                      });
+                  }
                   message += ` ${defender.name}開始流血了！`;
               } else {
                   message += ` ${defender.name}的[韌性]抵抗了流血！`;
@@ -859,13 +932,22 @@ function performPlayerAttack(defender, action) {
               player.shield = Math.round(finalDamage * player.damageToShield);
               message += ` 你將傷害轉化為 ${player.shield} 點護盾！`;
           }}}
-  if (defender.hp <= 0 && defender.barsRemaining > 0) {
-      defender.barsRemaining--;
-      if (defender.barsRemaining > 0) {
-          defender.hp = defender.maxHp;
-          if (!message.includes("額外擊破") && !message.includes("貫穿")) {
-            message += ` 你擊破了${defender.name}的一條血條！`;
-          }}}return message;}
+    if (defender.hp <= 0 && defender.barsRemaining > 0) {
+            defender.barsRemaining--;
+            if (defender.barsRemaining > 0) {
+                    defender.hp = defender.maxHp;
+                    if (!message.includes("額外擊破") && !message.includes("貫穿")) {
+                        message += ` 你擊破了${defender.name}的一條血條！`;
+                    }}
+    }
+    // 反制詞綴：本回合需反擊
+    if (defender.counterAttackThisTurn) {
+            defender.counterAttackThisTurn = false;
+            message += ` ${defender.name}發動了反制！`;
+            const result = performEnemyAttack(player);
+            message += result.message;
+    }
+    return message;}
 function performEnemyAttack(defender) {
     let message = '';
     const effectiveStats = getPlayerEffectiveStats();
@@ -917,6 +999,14 @@ function performEnemyAttack(defender) {
         return result;
     }
     let damage = getRandomDamage(currentEnemy.attackMin, currentEnemy.attackMax);
+    // 波動詞綴修正
+    if (currentEnemy.affixes) {
+        currentEnemy.affixes.forEach(affix => {
+            if (affix.modifyDamage) {
+                damage = affix.modifyDamage(damage, currentEnemy);
+            }
+        });
+    }
     if (activeTrial && activeTrial.id === 'swordsmanAttack') {
         damage = 99999;
     }
@@ -952,7 +1042,7 @@ function performEnemyAttack(defender) {
         if (currentEnemy.affixes) {
             currentEnemy.affixes.forEach(affix => {
                 if (affix.onDealDamage) {
-                    affix.onDealDamage(damage, currentEnemy);
+                    affix.onDealDamage(damage, currentEnemy, defender);
                 }
             });
         }

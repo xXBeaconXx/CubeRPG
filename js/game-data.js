@@ -459,10 +459,98 @@ const battlefieldEnvironments = {
 // NEW SYSTEM: Enemy Affixes
 // ====================================================
 const enemyAffixes = {
+    Exchange: {
+        name: "交換",
+        description: "擊敗此敵人後的金錢獎勵與經驗獎勵交換。",
+        onDefeat: (enemy) => {
+            // 標記本場需交換獎勵
+            enemy.exchangeReward = true;
+        }
+    },
+    TimeDilation: {
+        name: "時緩",
+        description: "對此敵人的負面狀態只持續一回合。",
+        onStatusApply: (enemy, status) => {
+            // 標記狀態只持續一回合
+            if (status) status.turnsRemaining = 1;
+        }
+    },
+    Undying: {
+        name: "不屈",
+        description: "在受到足以秒殺的傷害時，此敵人會必定剩下1hp。",
+        onTakeFatalDamage: (enemy, damage) => {
+            // 若傷害超過當前hp，觸發不屈
+            if (damage >= enemy.hp) {
+                enemy.hp = 1;
+                return true; // 已觸發
+            }
+            return false;
+        }
+    },
+    Counter: {
+        name: "反制",
+        description: "敵人在閃避攻擊後會立即多攻擊一次。",
+        onEvade: (enemy, player) => {
+            // 標記本回合需反擊
+            enemy.counterAttackThisTurn = true;
+        }
+    },
+    Wave: {
+        name: "波動",
+        description: "敵人的傷害在單數回合為50%，雙數回合為150%。",
+        modifyDamage: (damage, enemy) => {
+            if (!enemy.turnCount) enemy.turnCount = 1;
+            if (enemy.turnCount % 2 === 1) {
+                return Math.round(damage * 0.5);
+            } else {
+                return Math.round(damage * 1.5);
+            }
+        },
+        onTurnStart: (enemy) => {
+            enemy.turnCount = (enemy.turnCount || 0) + 1;
+        }
+    },
+    Evolve: {
+        name: "進化",
+        description: "玩家在15回合內未擊敗敵人，敵人將會獲得額外2個詞條（不含進化）。",
+        onTurnStart: (enemy) => {
+            enemy.evolveTurn = (enemy.evolveTurn || 0) + 1;
+            if (enemy.evolveTurn === 15 && !enemy.evolved) {
+                // 進化觸發
+                const availableAffixKeys = Object.keys(enemyAffixes).filter(k => k !== 'Evolve' && !enemy.affixes.some(a => a.name === enemyAffixes[k].name));
+                const shuffled = availableAffixKeys.sort(() => 0.5 - Math.random());
+                for (let i = 0; i < 2 && i < shuffled.length; i++) {
+                    const key = shuffled[i];
+                    const newAffix = { ...enemyAffixes[key] };
+                    enemy.affixes.push(newAffix);
+                    if (newAffix.applyStats) newAffix.applyStats(enemy);
+                }
+                enemy.evolved = true;
+                gameMessage.textContent += ` 【進化】詞綴觸發，敵人獲得了新詞綴！`;
+            }
+        }
+    },
+    Forgetful: {
+        name: "遺忘",
+        description: "此戰遺物將無效。",
+        applyStats: (enemy) => { enemy.forgetRelics = true; }
+    },
+    Steal: {
+        name: "竊取",
+        description: "攻擊命中時有10%機率讓玩家減少10%金錢。",
+        onDealDamage: (damage, enemy, player) => {
+            if (Math.random() < 0.10 && currentMoney > 0) {
+                const stolen = Math.max(1, Math.round(currentMoney * 0.10));
+                currentMoney -= stolen;
+                showFloatingText(`-${stolen}`, playerChar, 'money');
+                gameMessage.textContent += ` [竊取] 詞綴觸發，你損失了 ${stolen} 金錢！`;
+            }
+        }
+    },
     Armored: {
         name: "護甲",
-        description: "受到的所有傷害減少 50 點。",
-        applyIncomingDamage: (damage) => Math.max(1, damage - 50)
+        description: "受到的所有傷害減少 20%。",
+        applyIncomingDamage: (damage) => Math.max(1, Math.round(damage * 0.8))
     },
     Vampiric: {
         name: "吸血",
@@ -475,9 +563,9 @@ const enemyAffixes = {
     },
     Thorns: {
         name: "荊棘",
-        description: "被攻擊時，反彈 100 點傷害給攻擊者。",
+        description: "被攻擊時，反彈玩家本次攻擊傷害的 20%。",
         onTakeDamage: (damage, player) => {
-            const reflectDmg = 100;
+            const reflectDmg = Math.max(1, Math.round(damage * 0.2));
             player.hp -= reflectDmg;
             showFloatingText(`-${reflectDmg}`, playerChar, 'damage');
             gameMessage.textContent += ` 你受到了 [荊棘] 詞綴的反彈傷害！`;
