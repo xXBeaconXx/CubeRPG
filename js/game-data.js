@@ -422,6 +422,24 @@ const battlefieldEnvironments = {
         applyEffect: (stats) => { stats.critDamage = (stats.critDamage || 1.5) * 1.5; return stats; },
         isAppliedTo: 'all'
     },
+    NanoRepairZone: {
+        name: "奈米修復區",
+        description: "每回合敵我雙方回復5%最大生命值。",
+        duration: 5,
+        isItemEffect: false,
+        isAppliedTo: 'all',
+    },
+    EnergyFlowField: {
+        name: "能量流場",
+        description: "敵我雙方所有造成的基礎傷害增加25%。",
+        duration: 5,
+        isItemEffect: false,
+        isAppliedTo: 'all',
+        applyEffect: (stats) => {
+            stats.baseDamageMultiplier = (stats.baseDamageMultiplier || 1) * 1.25;
+            return stats;
+        }
+    },
     CorrosiveSwamp: {
         name: "腐蝕沼澤",
         description: "回合結束時，所有單位受到最大生命值 5% 的傷害。",

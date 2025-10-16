@@ -113,20 +113,26 @@ function generateEnemy(isFromLoad = false) {
           gameMessage.textContent += ` ${currentEnvironment.name} 的效果消失了。`;
           currentEnvironment = null;
       }}
-  // 如果當前沒有環境，且符合生成條件，則生成新環境
-  if (!currentEnvironment && !isFromLoad && currentDimension === 'normal' && (currentWave - 1) % 5 === 0) {
-      shouldGenerateNewEnv = true;
-  }
-  if (shouldGenerateNewEnv) {
-      // 過濾掉只能由物品觸發的場地
-      const availableEnvKeys = Object.keys(battlefieldEnvironments).filter(key => !battlefieldEnvironments[key].isItemEffect);
-      if (availableEnvKeys.length > 0) {
-          const randomKey = availableEnvKeys[Math.floor(Math.random() * availableEnvKeys.length)];
+  // 只在普通維度與未來維度的5波倍數時生成場地
+  if (!currentEnvironment && !isFromLoad) {
+      if (currentDimension === 'normal' && (currentWave - 1) % 5 === 0) {
+          shouldGenerateNewEnv = true;
+          // 普通維度：隨機所有非物品場地
+          const availableEnvKeys = Object.keys(battlefieldEnvironments).filter(key => !battlefieldEnvironments[key].isItemEffect);
+          if (availableEnvKeys.length > 0) {
+              const randomKey = availableEnvKeys[Math.floor(Math.random() * availableEnvKeys.length)];
+              currentEnvironment = { ...battlefieldEnvironments[randomKey] };
+              gameMessage.textContent = `戰場環境變為：${currentEnvironment.name}！`;
+          }
+      } else if (currentDimension === 'future' && currentWave % 5 === 0) {
+          // 未來維度：只隨機奈米修復區或能量流場
+          const futureEnvKeys = ['NanoRepairZone', 'EnergyFlowField'];
+          const randomKey = futureEnvKeys[Math.floor(Math.random() * futureEnvKeys.length)];
           currentEnvironment = { ...battlefieldEnvironments[randomKey] };
-          gameMessage.textContent = `戰場環境變為：${currentEnvironment.name}！`;
+          gameMessage.textContent = `未來維度場地觸發：${currentEnvironment.name}！`;
       }
-  } else if (currentDimension !== 'normal') {
-      currentEnvironment = null; // 在非普通維度時清除環境
+  } else if (currentDimension !== 'normal' && currentDimension !== 'future') {
+      currentEnvironment = null; // 其他維度清除環境
   }
   let enemyToSpawn = null;
   let waveMessage = '';
@@ -325,6 +331,17 @@ async function startBattleTurn() {
       showFloatingText(`+${healAmount}`, playerChar, 'heal');
       gameMessage.textContent += `原始場地為你回復了 ${healAmount} 生命！ `;
   }
+  // 奈米修復區：敵我雙方每回合回復5%最大生命值
+  if (currentEnvironment && currentEnvironment.name === "奈米修復區" && !currentEnvironment.paused) {
+      const playerHeal = Math.round(getPlayerEffectiveStats().maxHp * 0.05);
+      player.hp = Math.min(getPlayerEffectiveStats().maxHp, player.hp + playerHeal);
+      showFloatingText(`+${playerHeal}`, playerChar, 'heal');
+      gameMessage.textContent += `奈米修復區為你回復了 ${playerHeal} 生命！ `;
+      const enemyHeal = Math.round(currentEnemy.maxHp * 0.05);
+      currentEnemy.hp = Math.min(currentEnemy.maxHp, currentEnemy.hp + enemyHeal);
+      showFloatingText(`+${enemyHeal}`, enemyChar, 'heal');
+      gameMessage.textContent += `敵人回復了 ${enemyHeal} 生命！ `;
+  }
   if (currentEnemy.affixes) {
       currentEnemy.affixes.forEach(affix => {
           if (affix.onTurnStart) {
@@ -343,7 +360,7 @@ async function startBattleTurn() {
     player.rampingAttackBonus += player.rampingAttack;
     gameMessage.textContent += `永恆怒火使你攻擊力提升 ${player.rampingAttack}！ `;
   }
-  const effectiveStats = getPlayerEffectiveStats();
+    let effectiveStats = getPlayerEffectiveStats();
   if (player.turnStartHeal > 0) {
       player.hp = Math.min(effectiveStats.maxHp, player.hp + player.turnStartHeal);
       showFloatingText(`+${player.turnStartHeal}`, playerChar, 'heal');
@@ -408,8 +425,10 @@ async function startBattleTurn() {
       if (currentEnemy.hp <= 0 && currentEnemy.barsRemaining <= 0) { handleEnemyDefeat(currentEnemy.name, false); return; }
       await new Promise(resolve => setTimeout(resolve, 800));
   }
-  let firstAttacker = (effectiveStats.speed + player.tempSpeed >= currentEnemy.speed) ? player : currentEnemy;
-  let secondAttacker = (firstAttacker === player) ? currentEnemy : player;
+    let firstAttacker = (effectiveStats.speed + player.tempSpeed >= currentEnemy.speed) ? player : currentEnemy;
+    let secondAttacker = (firstAttacker === player) ? currentEnemy : player;
+    // 能量流場：提升雙方基礎傷害
+    let energyFlowActive = currentEnvironment && currentEnvironment.name === "能量流場" && !currentEnvironment.paused;
   if (currentEnvironment && currentEnvironment.name === "原始場地" && !currentEnvironment.paused) {
       firstAttacker = currentEnemy;
       secondAttacker = player;
@@ -418,13 +437,31 @@ async function startBattleTurn() {
       firstAttacker = player;
       secondAttacker = currentEnemy;
   }
-  const firstAttackResult = await performAction(firstAttacker, secondAttacker, playerAction);
+  // 包裝 performAction 以加成基礎傷害
+  async function performActionWithEnergyFlow(attacker, defender, action) {
+      if (!energyFlowActive) return performAction(attacker, defender, action);
+      // 臨時加成
+      if (attacker === player) {
+          player.tempDamageMultiplier = (player.tempDamageMultiplier || 1) * 1.25;
+      } else if (attacker === currentEnemy) {
+          currentEnemy.tempDamageMultiplier = (currentEnemy.tempDamageMultiplier || 1) * 1.25;
+      }
+      const result = await performAction(attacker, defender, action);
+      // 還原
+      if (attacker === player) {
+          player.tempDamageMultiplier = (player.tempDamageMultiplier || 1) / 1.25;
+      } else if (attacker === currentEnemy) {
+          currentEnemy.tempDamageMultiplier = (currentEnemy.tempDamageMultiplier || 1) / 1.25;
+      }
+      return result;
+  }
+  const firstAttackResult = await performActionWithEnergyFlow(firstAttacker, secondAttacker, playerAction);
   if (firstAttackResult.battleOver) return;
   await new Promise(resolve => setTimeout(resolve, 1000));
   if (firstAttackResult.enemyDefeatedOnTheirTurn){
       handleEnemyDefeat(currentEnemy.name, true,true);
       return;}
-  const secondAttackResult = await performAction(secondAttacker, firstAttacker, playerAction);
+  const secondAttackResult = await performActionWithEnergyFlow(secondAttacker, firstAttacker, playerAction);
   if (secondAttackResult.battleOver) return;
   if(secondAttackResult.enemyDefeatedOnTheirTurn){
       handleEnemyDefeat(currentEnemy.name, true, true);
