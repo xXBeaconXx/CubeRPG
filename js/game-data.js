@@ -104,7 +104,7 @@ let shortLivedTrialTimeRemaining = 60;
 const baseItemValues = {
   attackUpgrade: { cost: 100, amount: 5, description: "永久提升攻擊力 5 點" },
   maxHPUpgrade: { cost: 120, amount: 20, description: "永久提升血量上限 20 點" },
-  speedUpgrade: { cost: 80, amount: 1, description: "永久提升速度 1 點" },
+    speedUpgrade: { cost: 80, amount: 0.5, description: "永久提升速度 0.5 點" },
   evasionUpgrade: { cost: 1000, amount: 1, description: "永久提升閃避 1%" },
   critDamageUpgrade: { cost: 50, amount: 0.1, description: "永久提升爆擊傷害 0.1x" },
   heal: { cost: 30, amount: 50, description: "回復 50 點生命值 (不超過上限)", type: "fixed" },
