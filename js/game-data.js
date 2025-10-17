@@ -191,20 +191,6 @@ const allAbilities = {
         getDamageMultiplier: () => 1.5,
         getIncreasedPP: () => 0
     },
-    "虛空脈衝": {
-        id: "ability_void_pulse",
-        name: "虛空脈衝",
-        description: "對敵方造成200+(Lv*30)%最大傷害且不會觸發任何敵方詞條。",
-        levelRequired: 20,
-        spCost: 3,
-        basePP: 2,
-        upgradeCostSP: 2,
-        exclusiveTo: ["刺客 | 改"],
-        getEffectDescription: (level) => `對敵方造成${200 + level * 30}%最大傷害且不會觸發任何敵方詞條。`,
-        getDamageMultiplier: (level) => (200 + level * 30) / 100,
-        getIncreasedPP: (level) => Math.floor(level / 3),
-        ignoreAffixes: true
-    },
     "防禦姿態": { 
         id: "ability_defensive_stance", 
         name: "防禦姿態", 
