@@ -16,260 +16,216 @@ function learnTalent(talentId) {
     targetTalent.applyEffect(player.talents[talentId]);
     gameMessage.textContent = `成功學習「${targetTalent.name}」！`;
     updateAllDisplays();}
-function updateCraftingPreview() { 
-    let totalHP = 0, totalATK = 0, totalSPD = 0;
-    let totalItemsUsed = 0;
+function updateCraftingPreview() {
     const playerSelection = {};
+    let totalItemsUsed = 0;
+    
     document.querySelectorAll('.craft-input').forEach(input => {
-        const itemName = input.dataset.itemName; 
-        let quantity = parseInt(input.value) || 0; 
-        const maxQuantity = parseInt(input.max); 
-        if (quantity > maxQuantity) { quantity = maxQuantity; input.value = maxQuantity; } 
-        if (quantity < 0) { quantity = 0; input.value = 0; } 
+        const itemName = input.dataset.itemName;
+        let quantity = parseInt(input.value) || 0;
+        const maxQuantity = parseInt(input.max);
+        
+        if (quantity > maxQuantity) {
+            quantity = maxQuantity;
+            input.value = maxQuantity;
+        }
+        if (quantity < 0) {
+            quantity = 0;
+            input.value = 0;
+        }
         if (quantity > 0) {
             playerSelection[itemName] = quantity;
         }
         totalItemsUsed += quantity;
-        if (fragmentStats[itemName]) { 
-            totalHP += (fragmentStats[itemName].hp || 0) * quantity; 
-            totalATK += (fragmentStats[itemName].atk || 0) * quantity; 
-            totalSPD += (fragmentStats[itemName].spd || 0) * quantity; 
-        }});
+    });
+
+    // 使用 WeaponUtils.calculateStats 计算属性
+    const stats = WeaponUtils.calculateStats(playerSelection);
+    
     const previewHpElement = document.getElementById('preview-hp');
-    if(previewHpElement){previewHpElement.textContent = totalHP;}
-    document.getElementById('preview-atk').textContent = totalATK; 
-    document.getElementById('preview-spd').textContent = totalSPD; 
+    if (previewHpElement) {
+        previewHpElement.textContent = stats.hp;
+    }
+    document.getElementById('preview-atk').textContent = stats.atk;
+    document.getElementById('preview-spd').textContent = stats.spd;
     document.getElementById('preview-fragments').textContent = totalItemsUsed;
+
     const craftButton = document.getElementById('craft-weapon-button');
     const matchedRecipe = specialRecipes.find(recipe => {
-        if(recipe.requiredDimension&&recipe.requiredDimension!==currentDimension){return false;}
-        if(recipe.name==="月見 II"&&(!player.backpack["月見 I"]||player.backpack["月見 I"]<1)){return false;}
-        if(recipe.name==="月見 III"&&(!player.backpack["月見 II"]||player.backpack["月見 II"]<1)){return false;}
-        return isRecipeMatch(playerSelection, recipe.composition).match;});
+        if (recipe.requiredDimension && recipe.requiredDimension !== currentDimension) return false;
+        if (recipe.name === "月見 II" && (!player.backpack["月見 I"] || player.backpack["月見 I"] < 1)) return false;
+        if (recipe.name === "月見 III" && (!player.backpack["月見 II"] || player.backpack["月見 II"] < 1)) return false;
+        return WeaponUtils.checkRecipeMatch(playerSelection, recipe.composition).match;
+    });
+
     if (matchedRecipe) {
         craftButton.disabled = false;
-        document.getElementById('preview-fragments').textContent += ` / ${Object.values(matchedRecipe.composition).reduce((a,b)=>a+b,0)}`;
+        document.getElementById('preview-fragments').textContent += ` / ${Object.values(matchedRecipe.composition).reduce((a, b) => a + b, 0)}`;
     } else {
         craftButton.disabled = totalItemsUsed !== 8;
         document.getElementById('preview-fragments').textContent += " / 8";
-    }}
-function removeSpecialWeaponEffects() {
-    player.damageToShield = 0;
-    player.weaponMoneyBonus = 0;
-    player.rampingAttack = 0;
-    player.bonusCritDamage = 0;
-    player.recoilDamagePercent = 0;
-    player.turnStartHeal = 0;
-    player.turnSkipChance = 0;
-    player.damageSpillover = false;
-    const oldWeaponName = player.weaponStats.name;
-    const oldRecipe = specialRecipes.find(r => r.name === oldWeaponName);
-    if (oldRecipe && oldRecipe.bonusStats) {
-        if (oldRecipe.bonusStats.flatDamageReduction) player.flatDamageReduction -= oldRecipe.bonusStats.flatDamageReduction;
-        if (oldRecipe.bonusStats.bleedChance) player.bleedChance -= oldRecipe.bonusStats.bleedChance;
-        if (oldRecipe.bonusStats.bleedDamagePercentage) player.bleedDamagePercentage -= oldRecipe.bonusStats.bleedDamagePercentage;
-        if (oldRecipe.bonusStats.reflectDamage) player.reflectDamage -= oldRecipe.bonusStats.reflectDamage;
-        if (oldRecipe.bonusStats.evasion) player.evasion -= oldRecipe.bonusStats.evasion;
-        if (oldRecipe.bonusStats.critChance) player.critChance -= oldRecipe.bonusStats.critChance;
-    }}
+    }
+}
 function craftWeapon() {
     let playerSelection = {};
     let totalItemsUsed = 0;
+    
     document.querySelectorAll('.craft-input').forEach(input => {
         const quantity = parseInt(input.value) || 0;
         if (quantity > 0) {
             playerSelection[input.dataset.itemName] = quantity;
             totalItemsUsed += quantity;
-        }});
+        }
+    });
+    
     const useHilt = document.getElementById('use-hilt-checkbox')?.checked || false;
-    const matchedRecipeResult = specialRecipes.map(r => ({ recipe: r, ...isRecipeMatch(playerSelection, r.composition) }))
+    
+    // 检查配方匹配
+    const matchedRecipeResult = specialRecipes
+        .map(r => ({ 
+            recipe: r, 
+            ...WeaponUtils.checkRecipeMatch(playerSelection, r.composition) 
+        }))
         .find(res => {
             if (!res.match) return false;
             if (res.recipe.exclusiveTo && !player.profession.includes(res.recipe.exclusiveTo)) return false;
             if (res.recipe.requiredDimension && res.recipe.requiredDimension !== currentDimension) return false;
             if (res.recipe.name === "月見 II" && (!player.backpack["月見 I"] || player.backpack["月見 I"] < 1)) {
-                return false;}
+                return false;
+            }
             if (res.recipe.name === "月見 III" && (!player.backpack["月見 II"] || player.backpack["月見 II"] < 1)) {
-                return false;}return true;});
+                return false;
+            }
+            return true;
+        });
+
     if (!matchedRecipeResult && totalItemsUsed !== 8) {
-         gameMessage.textContent = "武器打造需要剛好使用 8 個碎片或符合特殊配方！";
-         return;
+        gameMessage.textContent = "武器打造需要剛好使用 8 個碎片或符合特殊配方！";
+        return;
     }
+
+    // 记录发现的配方
     specialRecipes.forEach(recipe => {
         if (!player.discoveredRecipes[recipe.name]) {
             player.discoveredRecipes[recipe.name] = {};
         }
         for (const craftedItem in playerSelection) {
-            if (craftedItem === '暗影碎片') continue; 
+            if (craftedItem === '暗影碎片') continue;
             const craftedQty = playerSelection[craftedItem];
             if (recipe.composition[craftedItem] && recipe.composition[craftedItem] === craftedQty) {
                 if (!player.discoveredRecipes[recipe.name][craftedItem]) {
                     player.discoveredRecipes[recipe.name][craftedItem] = true;
-                }}}});
-    if (matchedRecipeResult) {
-        const recipeToCraft = matchedRecipeResult.recipe;
-        if (recipeToCraft.name === "月見 II" && (!player.backpack["月見 I"] || player.backpack["月見 I"] < 1)) {
-            gameMessage.textContent = "製作【月見 II】需要背包中至少有一個【月見 I】！";
-            return;
-        }
-        if (recipeToCraft.name === "月見 III" && (!player.backpack["月見 II"] || player.backpack["月見 II"] < 1)) {
-            gameMessage.textContent = "製作【月見 III】需要背包中至少有一個【月見 II】！";
-            return;
-        }
-        if (recipeToCraft.type === 'material') {
-            for(const [itemName, requiredCount] of Object.entries(recipeToCraft.composition)) {
-                player.backpack[itemName] -= requiredCount;
-                if(player.backpack[itemName] <= 0) delete player.backpack[itemName];
+                }
             }
-            let shadowsToConsume = matchedRecipeResult.shadowsNeeded;
-            if (shadowsToConsume > 0) {
-                player.backpack['暗影碎片'] = (player.backpack['暗影碎片'] || 0) - shadowsToConsume;
-                if(player.backpack['暗影碎片'] <= 0) delete player.backpack['暗影碎片'];
-            }
-            addItemToBackpack(recipeToCraft.name, 1);
-            gameMessage.textContent = recipeToCraft.specialEffect;
-            updateAllDisplays();
-            if(tabBackpack.classList.contains('active')) renderBackpack();
-            return;
-        }}
-    const oldWeaponName = player.weaponStats.name;
-    const oldRecipe = specialRecipes.find(r => r.name === oldWeaponName);
-    player.maxHp -= player.weaponStats.hp;
-    if(player.hp > player.maxHp) player.hp = player.maxHp;
-    if (player.profession.includes("刺客")) { 
-        player.attackMax -= player.weaponStats.atk; 
-    } else { 
-        player.attackMin -= player.weaponStats.atk; 
-        player.attackMax -= player.weaponStats.atk; 
+        }
+    });
+
+    // 处理材料配方
+    if (matchedRecipeResult && matchedRecipeResult.recipe.type === 'material') {
+        WeaponUtils.consumeMaterials(matchedRecipeResult.recipe.composition);
+        
+        let shadowsToConsume = matchedRecipeResult.shadowsNeeded;
+        if (shadowsToConsume > 0) {
+            player.backpack['暗影碎片'] = (player.backpack['暗影碎片'] || 0) - shadowsToConsume;
+            if (player.backpack['暗影碎片'] <= 0) delete player.backpack['暗影碎片'];
+        }
+        
+        addItemToBackpack(matchedRecipeResult.recipe.name, 1);
+        gameMessage.textContent = matchedRecipeResult.recipe.specialEffect;
+        updateAllDisplays();
+        if (tabBackpack.classList.contains('active')) renderBackpack();
+        return;
     }
-    player.speed -= player.weaponStats.spd;
-    if (oldRecipe && oldRecipe.bonusStats) {
-        if (oldRecipe.bonusStats.flatDamageReduction) player.flatDamageReduction -= oldRecipe.bonusStats.flatDamageReduction;
-        if (oldRecipe.bonusStats.bleedChance) player.bleedChance -= oldRecipe.bonusStats.bleedChance;
-        if (oldRecipe.bonusStats.bleedDamagePercentage) player.bleedDamagePercentage -= oldRecipe.bonusStats.bleedDamagePercentage;
-        if (oldRecipe.bonusStats.reflectDamage) player.reflectDamage -= oldRecipe.bonusStats.reflectDamage;
-        if (oldRecipe.bonusStats.evasion) player.evasion -= oldRecipe.bonusStats.evasion;
-        if (oldRecipe.bonusStats.critChance) player.critChance -= oldRecipe.bonusStats.critChance;
-    }
-    player.damageToShield = 0;
-    player.weaponMoneyBonus = 0;
-    player.rampingAttack = 0;
-    player.bonusCritDamage = 0;
-    player.recoilDamagePercent = 0;
-    player.turnStartHeal = 0;
-    player.turnSkipChance = 0;
-    player.damageSpillover = false;
+
+    // 移除当前武器
+    WeaponUtils.removeCurrentWeapon();
+
     let finalHP = 0, finalATK = 0, finalSPD = 0;
     let weaponName = "自製武器";
     let successMessage = "";
+
     if (matchedRecipeResult) {
         const recipeToCraft = matchedRecipeResult.recipe;
         weaponName = recipeToCraft.name;
         successMessage = `你成功打造了傳奇物品：${recipeToCraft.specialEffect}`;
-        for(const [itemName, requiredCount] of Object.entries(recipeToCraft.composition)) {
-            player.backpack[itemName] -= requiredCount;
-            if(player.backpack[itemName] <= 0) delete player.backpack[itemName];
-        }
+        
+        // 消耗材料
+        WeaponUtils.consumeMaterials(recipeToCraft.composition);
+        
         let shadowsToConsume = matchedRecipeResult.shadowsNeeded;
         if (shadowsToConsume > 0 && (player.efficientCraftingChance || 0) > 0 && Math.random() < player.efficientCraftingChance) {
             shadowsToConsume--;
             successMessage += " (你幸運地節省了一枚暗影碎片！)";
         }
+        
         if (shadowsToConsume > 0) {
             player.backpack['暗影碎片'] = (player.backpack['暗影碎片'] || 0) - shadowsToConsume;
-            if(player.backpack['暗影碎片'] <= 0) delete player.backpack['暗影碎片'];
+            if (player.backpack['暗影碎片'] <= 0) delete player.backpack['暗影碎片'];
         }
+        
         finalHP = recipeToCraft.bonusStats.hp || 0;
         finalATK = recipeToCraft.bonusStats.atk || 0;
         finalSPD = recipeToCraft.bonusStats.spd || 0;
-        if(recipeToCraft.bonusStats.bleedChance) player.bleedChance += recipeToCraft.bonusStats.bleedChance;
-        if(recipeToCraft.bonusStats.bleedDamagePercentage) player.bleedDamagePercentage += recipeToCraft.bonusStats.bleedDamagePercentage;
-        if(recipeToCraft.bonusStats.reflectDamage) player.reflectDamage += recipeToCraft.bonusStats.reflectDamage;
-        if(recipeToCraft.bonusStats.evasion) player.evasion += recipeToCraft.bonusStats.evasion;
-        if(recipeToCraft.bonusStats.flatDamageReduction) player.flatDamageReduction += recipeToCraft.bonusStats.flatDamageReduction;
-        if(recipeToCraft.bonusStats.critChance) player.critChance += recipeToCraft.bonusStats.critChance;
-        if (recipeToCraft.name === "霸者之證") player.turnStartHeal = 150; 
-        if (recipeToCraft.name === "時序斷層之刃") player.turnSkipChance = 0.65; 
-        if (recipeToCraft.name === "影舞者之吻") player.damageToShield = 0.25;
-        if (recipeToCraft.name === "永恆怒火") player.rampingAttack = 100;
-        if (recipeToCraft.name === "黃金之觸") player.weaponMoneyBonus = 0.50;
-        if (recipeToCraft.name === "神賜") player.turnSkipChance = 0.15;
-        if (recipeToCraft.name === "澗月") player.damageSpillover = true;
+        
+        // 应用武器特殊效果
+        WeaponUtils.applyWeaponSpecialEffects(recipeToCraft);
     } else {
-        for (const [itemName, quantity] of Object.entries(playerSelection)) {
-             player.backpack[itemName] -= quantity;
-             if (player.backpack[itemName] <= 0) delete player.backpack[itemName];
-             if (fragmentStats[itemName] && itemName !== '暗影碎片') {
-                 finalHP += (fragmentStats[itemName].hp || 0) * quantity;
-                 finalATK += (fragmentStats[itemName].atk || 0) * quantity;
-                 finalSPD += (fragmentStats[itemName].spd || 0) * quantity;
-             }
-        }
+        // 普通打造
+        WeaponUtils.consumeMaterials(playerSelection);
+        
         if (useHilt) {
             if (!player.backpack["青光劍柄"] || player.backpack["青光劍柄"] <= 0) {
-                 gameMessage.textContent = "你沒有青光劍柄！"; return;
+                gameMessage.textContent = "你沒有青光劍柄！";
+                return;
             }
             player.backpack["青光劍柄"]--;
             if (player.backpack["青光劍柄"] === 0) delete player.backpack["青光劍柄"];
             weaponName = "青光劍";
         }
+        
+        const stats = WeaponUtils.calculateStats(playerSelection);
+        finalHP = stats.hp;
+        finalATK = stats.atk;
+        finalSPD = stats.spd;
+        
         successMessage = `新武器「${weaponName}」打造成功！HP+${finalHP}, ATK+${finalATK}, SPD+${finalSPD}！`;
     }
+
+    // 短命方块武器不加HP
     if (player.profession.includes("短命方塊")) {
-        finalHP = 0; // 短命方塊武器不加HP
+        finalHP = 0;
         if (successMessage.includes('HP+')) {
-             successMessage = successMessage.replace(/HP[+-]?\d+,\s*/, '');
-             successMessage = successMessage.replace(/HP\+\d+,?\s*/, '');
-        }}
-    player.weaponStats = { name: weaponName, hp: finalHP, atk: finalATK, spd: finalSPD, composition: { ...playerSelection } };
+            successMessage = successMessage.replace(/HP[+-]?\d+,\s*/, '');
+            successMessage = successMessage.replace(/HP\+\d+,?\s*/, '');
+        }
+    }
+
+    // 装备新武器
+    player.weaponStats = { 
+        name: weaponName, 
+        hp: finalHP, 
+        atk: finalATK, 
+        spd: finalSPD, 
+        composition: { ...playerSelection } 
+    };
+    
     player.maxHp += finalHP;
     player.hp += finalHP;
-    if(player.hp <= 0) player.hp = 1;
-    if (player.profession.includes("刺客")) { player.attackMax += finalATK; } 
-    else { player.attackMin += finalATK; player.attackMax += finalATK; }
+    if (player.hp <= 0) player.hp = 1;
+    
+    if (player.profession.includes("刺客")) {
+        player.attackMax += finalATK;
+    } else {
+        player.attackMin += finalATK;
+        player.attackMax += finalATK;
+    }
+    
     player.speed += finalSPD;
+    
     checkAndUnlockSwordLight();
     gameMessage.textContent = successMessage;
     updateAllDisplays();
-    if(tabBackpack.classList.contains('active')) renderBackpack();
-}
-function isRecipeMatch(playerSelection, recipeComposition) {
-    const selectionKeys = Object.keys(playerSelection);
-    const recipeKeys = Object.keys(recipeComposition);
-    let shadowsNeeded = 0;
-    const availableShadows = playerSelection['暗影碎片'] || 0;
-    const otherItemsSelected = selectionKeys.some(key => key !== '暗影碎片');
-    if (!otherItemsSelected && availableShadows > 0) {
-        return { match: false, shadowsNeeded: 0 };
-    }
-    const totalPlayerItems = Object.values(playerSelection).reduce((sum, count) => sum + count, 0);
-    const totalRecipeItems = Object.values(recipeComposition).reduce((sum, count) => sum + count, 0);
-    if (totalPlayerItems !== totalRecipeItems) {
-        return { match: false, shadowsNeeded: 0 };
-    }
-    if (selectionKeys.filter(k => k !== '暗影碎片').length > recipeKeys.length) {
-        return { match: false, shadowsNeeded: 0 };
-    }
-    for (const requiredItem of recipeKeys) {
-        if (!selectionKeys.includes(requiredItem)) {
-            shadowsNeeded += recipeComposition[requiredItem];
-        }
-    }
-    for (const selectedItem of selectionKeys) {
-        if (selectedItem === '暗影碎片') continue;
-        if (!recipeKeys.includes(selectedItem)) {
-             return { match: false, shadowsNeeded: 0 };
-        }
-        if (playerSelection[selectedItem] < recipeComposition[selectedItem]) {
-            shadowsNeeded += recipeComposition[selectedItem] - playerSelection[selectedItem];
-        } else if (playerSelection[selectedItem] > recipeComposition[selectedItem]) {
-            return { match: false, shadowsNeeded: 0 };
-        }
-    }
-    if (shadowsNeeded <= availableShadows) {
-        return { match: true, shadowsNeeded: shadowsNeeded };
-    }
-    return { match: false, shadowsNeeded: 0 };
+    if (tabBackpack.classList.contains('active')) renderBackpack();
 }
 function checkAndUnlockSwordLight() { const weapon = player.weaponStats; const composition = weapon.composition; if (weapon.name === "青光劍" && composition && composition["鋼劍方塊碎片"] >= 1) { if (!player.abilities["劍光"]?.learned) { learnAbility("劍光"); gameMessage.textContent = "手持特製的青光劍，你領悟了新技能：「劍光」！"; } } }
 function learnAbility(abilityName) { const abilityDef = allAbilities[abilityName]; if (player.abilities[abilityName]?.learned) return false; if (abilityDef.spCost > 0 && player.sp < abilityDef.spCost) { gameMessage.textContent = '技能點不足！'; return false; } if (player.level < abilityDef.levelRequired) { gameMessage.textContent = `等級不足 (需要等級 ${abilityDef.levelRequired})。`; return false; } if (abilityDef.spCost > 0) player.sp -= abilityDef.spCost; player.abilities[abilityName] = { learned: true, level: 0, currentPP: abilityDef.basePP, maxPP: abilityDef.basePP }; if (abilityDef.spCost > 0) gameMessage.textContent = `你學習了招式：「${abilityName}」！`; updateDisplay(); return true; }

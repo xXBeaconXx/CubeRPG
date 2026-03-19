@@ -282,45 +282,17 @@ document.addEventListener('DOMContentLoaded', () => {
             tutorialOverlay.style.display = 'none';}});}});
 
 function startShortLivedTrialTimer(resetTime = true) {
-    stopShortLivedTrialTimer(); // 先確保舊的計時器已停止
-    const timerDisplay = document.getElementById('shortLivedTrialTimerDisplay');
-    const timerElement = document.getElementById('shortLivedTrialTime');
-    if (!timerDisplay || !timerElement) return;
-
-    timerDisplay.style.display = 'block';
-    if (resetTime) {
-        shortLivedTrialTimeRemaining = 60;
-    }
-    timerElement.textContent = shortLivedTrialTimeRemaining;
-
-    shortLivedTrialTimer = setInterval(() => {
-        shortLivedTrialTimeRemaining--;
-        timerElement.textContent = shortLivedTrialTimeRemaining;
-
-        if (shortLivedTrialTimeRemaining <= 0) {
-            player.bars--;
-            gameMessage.textContent = "時間到！你失去了一條血條！";
-            if (player.bars <= 0) {
-                endGame('你的血條已耗盡，挑戰失敗...');
-            } else {
-                startShortLivedTrialTimer();
-            }
-            updateDisplay();
-        }},1000);}
+    TrialUtils.startShortLivedTimer(resetTime);
+}
 
 function stopShortLivedTrialTimer() {
-    clearInterval(shortLivedTrialTimer);
-    shortLivedTrialTimer = null;
-    const timerDisplay = document.getElementById('shortLivedTrialTimerDisplay');
-    if (timerDisplay) {
-        timerDisplay.style.display = 'none';
-    }
+    TrialUtils.stopShortLivedTimer();
 }
 
 function handleTrialTimerOnLoad() {
     if (activeTrial && activeTrial.id === 'shortLivedTrial') {
-        startShortLivedTrialTimer(false);
+        TrialUtils.startShortLivedTimer(false);
     } else {
-        stopShortLivedTrialTimer();
+        TrialUtils.stopShortLivedTimer();
     }
 }

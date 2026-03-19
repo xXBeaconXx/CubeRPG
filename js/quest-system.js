@@ -82,22 +82,11 @@ function updateQuestDisplay() {
     document.getElementById('refreshQuestsBtn').disabled = currentMoney < 300;
 }
 function checkAllQuestProgress(enemyName, inOneTurn = false) {
-    const allQuests = [...activeNormalQuests, ...activeTransferQuests];
-    allQuests.forEach(quest => {
-        if (!quest.completed && (quest.type === 'kill' || !quest.type || quest.type === 'custom')) {
-            if (quest.isTransferQuest) {
-                if (quest.id === "assassinTransfer" && enemyName === "精英方塊" && inOneTurn) { quest.currentProgress++; }
-                else if (quest.id === "swordsmanTransfer" && enemyName === "魔王方塊") { quest.currentProgress = turnsAgainstBoss <= 5 ? 1 : 0; }
-                else if (quest.id === "shieldmanTransfer") { quest.currentProgress = player.totalReflectedDamage; }
-                else if (quest.id === "variantTransfer" && player.questTracking?.conditionMet) {
-                    quest.currentProgress = 1;}
-            } else if (quest.targetEnemy === enemyName) {
-                quest.currentProgress++;
-            } else if (Array.isArray(quest.targetEnemy) && quest.targetEnemy.includes(enemyName)) {
-                quest.currentProgress++;
-            }}});
+    // 直接使用 QuestUtils 检查进度
+    QuestUtils.checkQuestProgress(enemyName, inOneTurn);
     processCompletedQuests();
-    updateQuestDisplay();}
+    updateQuestDisplay();
+}
 function processCompletedQuests() {
     const allQuests = [...activeNormalQuests, ...activeTransferQuests];
     const newlyCompletedQuests = allQuests.filter(q => !q.completed && q.currentProgress >= q.targetCount);
@@ -120,56 +109,7 @@ function submitQuestItems(questId) {
             delete player.backpack[item];
         }}completeQuest(quest);}
 function completeQuest(quest) {
-    // Mark as completed for logic checks, though removal will be by ID
-    quest.completed = true;
-
-    // Give rewards
-    currentMoney += Math.round(quest.moneyReward * gameDifficulty.moneyMultiplier * (1 + (player.moneyBonusPercent || 0)));
-    gainXP(quest.xpReward);
-
-    // Handle transfer logic and set completion message
-    if (quest.isTransferQuest) {
-        if (quest.id === "assassinTransfer") performTransfer(quest.transferToProfession, quest.transferAttackBoost, quest.transferSpeedBoost);
-        else if (quest.id === "swordsmanTransfer") performTransfer(quest.transferToProfession, 0, 0, quest.transferBleedChanceBoost);
-        else if (quest.id === "shieldmanTransfer") performTransfer(quest.transferToProfession, 0, 0, 0, quest.transferReflectBoost, quest.transferMaxHPBoost);
-        else if (quest.id === "variantTransfer") {
-            performTransfer(quest.transferToProfession);
-            learnAbility("攻擊姿態");
-            gameMessage.textContent += " 你也領悟了新的姿態：攻擊姿態！";
-        } else if (quest.id === "shortlivedTransfer") {
-            performTransfer(quest.transferToProfession);
-            learnAbility("高速移動");
-            gameMessage.textContent += " 你的身法已達極致，領悟了新招式：高速移動！";
-        } else if (quest.id === "phantomBladeTransfer") {
-            performTransfer(quest.transferToProfession);
-            learnAbility("幻劍");
-            gameMessage.textContent += " 你掌握了劍之幻影，領悟了新招式：幻劍！";
-        } else if (quest.id === "phantomShieldTransfer") {
-            performTransfer(quest.transferToProfession);
-            learnAbility("盾反");
-            gameMessage.textContent += " 你洞悉了攻防的間隙，領悟了新招式：盾反！";
-        } else if (quest.id === "tyrantSwordTransfer") {
-            performTransfer(quest.transferToProfession, 0, 0, 0, 0, 0, true, false);
-        } else if (quest.id === "tyrantShieldTransfer") {
-            performTransfer(quest.transferToProfession, 0, 0, 0, 0, 0, false, true);
-        }
-        
-        // Remove the specific completed transfer quest by its ID
-        activeTransferQuests = activeTransferQuests.filter(q => q.id !== quest.id);
-
-    } else {
-        // This is a normal quest
-        gameMessage.textContent = `任務「${quest.name}」完成！獲得 ${Math.round(quest.moneyReward * gameDifficulty.moneyMultiplier)} 金錢和 ${quest.xpReward} 經驗值！`;
-        
-        // Remove the specific completed normal quest by its ID
-        activeNormalQuests = activeNormalQuests.filter(q => q.id !== quest.id);
-    }
-
-    // Update the display immediately to show the quest has been removed
-    updateAllDisplays();
-
-    // Schedule generation of new quests after a short delay
-    setTimeout(() => generateMultipleQuests(false), 2000);
+    QuestUtils.completeQuest(quest);
 }
 
 function performTransfer(newProfession, attackBoost, speedBoost, bleedChanceBoost = 0, reflectBoost = 0, maxHPBoost = 0, enablePiercingSpillover = false, enableReflectSpillover = false) {
@@ -193,6 +133,7 @@ function performTransfer(newProfession, attackBoost, speedBoost, bleedChanceBoos
         currentItemCosts.heal.cost = 99999;
         currentItemCosts.heal.description = "刺客無法回血";
     }
+
     let message = ` 轉職成功！你成為了「${newProfession}」！`;
     if (attackBoost) message += ` 攻擊力+${attackBoost}，`;
     if (speedBoost) message += ` 速度+${speedBoost}，`;
@@ -202,8 +143,12 @@ function performTransfer(newProfession, attackBoost, speedBoost, bleedChanceBoos
     if (enablePiercingSpillover) message += ` 你獲得了「攻擊貫穿」能力！`;
     if (enableReflectSpillover) message += ` 你獲得了「反傷貫穿」能力！`;
 
-    if (message.endsWith('，')) { message = message.substring(0, message.length - 1); }
+    if (message.endsWith('，')) {
+        message = message.substring(0, message.length - 1);
+    }
     message += '！';
+    
     gameMessage.textContent = `任務完成！` + message;
     updateShopItemsForProfession();
-    updateDisplay();}
+    updateDisplay();
+}
