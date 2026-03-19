@@ -473,16 +473,39 @@ const enemyAffixes = {
             showFloatingText(`+${healed}`, enemyChar, 'heal');
         }
     },
-    Thorns: {
-        name: "荊棘",
-        description: "被攻擊時，反彈 100 點傷害給攻擊者。",
-        onTakeDamage: (damage, player) => {
-            const reflectDmg = 100;
-            player.hp -= reflectDmg;
-            showFloatingText(`-${reflectDmg}`, playerChar, 'damage');
+Thorns: {
+    name: "荊棘",
+    description: "被攻擊時，反彈 100 點傷害給攻擊者。",
+    onTakeDamage: (damage, player) => {
+        const reflectDmg = 100;
+        player.hp -= reflectDmg; // 統一先扣血
+
+        // 判斷是否為短命方塊系列
+        const isShortLived = player.profession.includes("短命方塊") || player.profession.includes("短命 | 改");
+
+        if (isShortLived && player.hp <= 0) {
+            if (player.bars > 1) {
+                // 觸發掉條機制
+                player.bars--;
+                player.hp = player.maxHp; 
+                showFloatingText(`血條-1`, playerChar, 'damage');
+                gameMessage.textContent += ` 荊棘反傷擊破了你一條血條！剩餘 ${player.bars} 條。`;
+                return; // 結束邏輯
+            } else {
+                // 最後一條血沒了
+                player.hp = 0;
+                player.bars = 0;
+                gameMessage.textContent += ` 你受到了 [荊棘] 詞綴的致命反彈傷害！`;
+            }
+        } else {
+            // 一般傷害或尚未扣完血條
             gameMessage.textContent += ` 你受到了 [荊棘] 詞綴的反彈傷害！`;
         }
-    },
+
+        // 統一顯示傷害數值（除非已經顯示過掉條）
+        showFloatingText(`-${reflectDmg}`, playerChar, 'damage');
+    }
+},
     Swift: {
         name: "快速",
         description: "基礎速度提升 50%。",
@@ -502,9 +525,46 @@ const enemyAffixes = {
         description: "死亡時，對玩家造成一次等同於其最大攻擊力的傷害。",
         onDeath: (enemy, player) => {
             const damage = enemy.attackMax;
-            player.hp -= damage;
-            showFloatingText(`-${damage}`, playerChar, 'crit');
-            gameMessage.textContent += ` [復仇] 詞綴觸發，你受到了 ${damage} 點傷害！`;
+            
+            // 檢查是否為短命方塊
+            if (player.profession.includes("短命方塊") || player.profession.includes("短命 | 改")) {
+                // 短命方塊的特殊處理
+                player.hp -= damage;
+                
+                // 記錄原始傷害顯示
+                showFloatingText(`-${damage}`, playerChar, 'crit');
+                
+                // 檢查是否擊破血條
+                if (player.hp <= 0 && player.bars > 1) {
+                    // 擊破一條血條
+                    player.bars--;
+                    player.hp = player.maxHp;
+                    gameMessage.textContent += ` [復仇] 詞綴觸發，擊破了你一條血條！剩餘 ${player.bars} 條血條。`;
+                    
+                    // 更新顯示
+                    updateDisplay();
+                    
+                } else if (player.hp <= 0 && player.bars <= 1) {
+                    // 最後一條血條被擊破
+                    player.hp = 0;
+                    player.bars = 0;
+                    gameMessage.textContent += ` [復仇] 詞綴觸發，你受到了 ${damage} 點致命傷害！`;
+                    
+                    // 玩家死亡，觸發遊戲結束
+                    setTimeout(() => {
+                        checkFutureEvents(false);
+                        endGame(`你被敵人的[復仇]反傷擊敗了。`);
+                    }, 100);
+                } else {
+                    // 傷害不足以擊破血條
+                    gameMessage.textContent += ` [復仇] 詞綴觸發，你受到了 ${damage} 點傷害！`;
+                }
+            } else {
+                // 一般方塊的處理
+                player.hp -= damage;
+                showFloatingText(`-${damage}`, playerChar, 'crit');
+                gameMessage.textContent += ` [復仇] 詞綴觸發，你受到了 ${damage} 點傷害！`;
+            }
         }
     },
     Resilient: {

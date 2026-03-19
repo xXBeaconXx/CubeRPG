@@ -1122,3 +1122,100 @@ function usePrimalSeed() {
     gameMessage.textContent = "你種下了原始種子，古老的植物瞬間覆蓋了戰場！獲得『原始場地』效果！";
     updateAllDisplays();
 }
+
+// 調試函式
+// 調試函數：生成帶有指定詞條的敵人
+function spawnEnemyWithAffixes(enemyName, affixNames, waveLevel = null) {
+    // 從所有敵人池中查找敵人模板
+    const enemyPools = {
+        ...normalEnemyTypes.tier1,
+        ...normalEnemyTypes.tier2,
+        ...normalEnemyTypes.tier3,
+        ...normalEnemyTypes.boss,
+        ...ancientEnemyTypes.tier1,
+        ...ancientEnemyTypes.tier2,
+        ...ancientEnemyTypes.tier3,
+        ...futureEnemyTypes.tier1,
+        ...futureEnemyTypes.tier2,
+        ...futureEnemyTypes.tier3
+    };
+    
+    // 如果沒有指定敵人，使用強壯方塊作為預設
+    let enemyTemplate = enemyPools[enemyName] || normalEnemyTypes.tier2["強壯方塊"];
+    
+    // 複製敵人模板
+    currentEnemy = { ...enemyTemplate };
+    
+    // 設置波次加成
+    const waveForCalc = waveLevel || currentWave;
+    const growthFactor = 1 + (Math.floor((waveForCalc - 1) / 10) * 0.1);
+    
+    currentEnemy.maxHp = Math.round((enemyTemplate.hpPerBar || 100) * growthFactor * gameDifficulty.enemyMultiplier);
+    currentEnemy.hp = currentEnemy.maxHp;
+    currentEnemy.barsRemaining = enemyTemplate.bars || 1;
+    currentEnemy.totalBars = enemyTemplate.bars || 1;
+    currentEnemy.attackMin = Math.round((enemyTemplate.attackMin || 5) * growthFactor * gameDifficulty.enemyMultiplier);
+    currentEnemy.attackMax = Math.round((enemyTemplate.attackMax || 10) * growthFactor * gameDifficulty.enemyMultiplier);
+    
+    // 添加詞條
+    currentEnemy.affixes = [];
+    
+    // 詞條名稱映射
+    const affixMap = {
+        '護甲': enemyAffixes.Armored,
+        '吸血': enemyAffixes.Vampiric,
+        '荊棘': enemyAffixes.Thorns,
+        '快速': enemyAffixes.Swift,
+        '再生': enemyAffixes.Regenerating,
+        '復仇': enemyAffixes.Avenger,
+        '韌性': enemyAffixes.Resilient,
+        'armored': enemyAffixes.Armored,
+        'vampiric': enemyAffixes.Vampiric,
+        'thorns': enemyAffixes.Thorns,
+        'swift': enemyAffixes.Swift,
+        'regenerating': enemyAffixes.Regenerating,
+        'avenger': enemyAffixes.Avenger,
+        'resilient': enemyAffixes.Resilient
+    };
+    
+    // 添加指定的詞條
+    if (Array.isArray(affixNames)) {
+        affixNames.forEach(name => {
+            const affix = affixMap[name];
+            if (affix) {
+                const newAffix = { ...affix };
+                currentEnemy.affixes.push(newAffix);
+                if (newAffix.applyStats) {
+                    newAffix.applyStats(currentEnemy);
+                }
+            }
+        });
+    } else if (typeof affixNames === 'string') {
+        const affix = affixMap[affixNames];
+        if (affix) {
+            const newAffix = { ...affix };
+            currentEnemy.affixes.push(newAffix);
+            if (newAffix.applyStats) {
+                newAffix.applyStats(currentEnemy);
+            }
+        }
+    }
+    
+    // 重置戰鬥狀態
+    enemyBleedStatusData = null;
+    currentEnemy.isDisrupted = false;
+    attackButton.disabled = false;
+    isBattleInProgress = false;
+    
+    // 顯示訊息
+    let affixList = currentEnemy.affixes.map(a => `[${a.name}]`).join(' ');
+    gameMessage.textContent = `【調試模式】${currentEnemy.name} 出現了！詞條：${affixList}`;
+    updateAllDisplays();
+    
+    return currentEnemy;
+}
+
+// 使用範例：
+// spawnEnemyWithAffixes("強壯方塊", ["荊棘", "吸血"]);
+// spawnEnemyWithAffixes("魔王方塊", ["護甲", "再生", "復仇"]);
+// spawnEnemyWithAffixes("精英方塊", "荊棘"); // 單個詞條

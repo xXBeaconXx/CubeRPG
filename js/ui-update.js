@@ -1,11 +1,75 @@
-function updateAllDisplays() {
-  updateShopItemsForProfession();
-  updateDisplay();
-  updateQuestDisplay();
-  renderTalentTree();
-  if(tabSynthesis.classList.contains('active')) renderSynthesisRecipes();
-}
+// 進階版限流器 - 使用動態佇列管理
+const updateDisplayQueue = (function() {
+    let lastRunTime = Date.now();
+    let frameCount = 0;
+    let pendingUpdates = [];
+    let isProcessing = false;
+    const MAX_UPDATES_PER_SECOND = 30;
+    
+    function processQueue() {
+        if (pendingUpdates.length === 0) {
+            isProcessing = false;
+            return;
+        }
+        
+        const now = Date.now();
+        // 重置每秒計數
+        if (now - lastRunTime > 1000) {
+            lastRunTime = now;
+            frameCount = 0;
+        }
+        
+        // 如果還沒達到上限，執行更新
+        if (frameCount < MAX_UPDATES_PER_SECOND) {
+            frameCount++;
+            const callback = pendingUpdates.shift();
+            if (callback) callback();
+            
+            // 立即處理下一個（同步）
+            processQueue();
+        } else {
+            // 達到上限，等待下一幀再檢查
+            requestAnimationFrame(() => {
+                lastRunTime = Date.now();
+                frameCount = 0;
+                processQueue();
+            });
+        }
+    }
+    
+    return {
+        schedule(callback) {
+            pendingUpdates.push(callback);
+            
+            if (!isProcessing) {
+                isProcessing = true;
+                processQueue();
+            }
+        },
+        
+        // 清空佇列（例如在遊戲結束時）
+        clear() {
+            pendingUpdates = [];
+            isProcessing = false;
+        },
+        
+        // 獲取佇列長度
+        getQueueLength() {
+            return pendingUpdates.length;
+        }
+    };
+})();
 
+// 修改 updateAllDisplays 使用佇列系統
+function updateAllDisplays() {
+    updateDisplayQueue.schedule(() => {
+        updateShopItemsForProfession();
+        updateDisplay();
+        updateQuestDisplay();
+        renderTalentTree();
+        if(tabSynthesis.classList.contains('active')) renderSynthesisRecipes();
+    });
+}
 function renderTalentTree() {
     talentTreeContainer.innerHTML = '';
     for (const branchKey in talentTreeData) {
