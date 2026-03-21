@@ -60,15 +60,8 @@ const updateDisplayQueue = (function() {
     };
 })();
 
-// 修改 updateAllDisplays 使用佇列系統
 function updateAllDisplays() {
-    updateDisplayQueue.schedule(() => {
-        updateShopItemsForProfession();
-        updateDisplay();
-        updateQuestDisplay();
-        renderTalentTree();
-        if(tabSynthesis.classList.contains('active')) renderSynthesisRecipes();
-    });
+    DisplayUtils.updateAll();
 }
 function renderTalentTree() {
     talentTreeContainer.innerHTML = '';
